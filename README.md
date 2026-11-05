@@ -7,7 +7,7 @@ Hệ thống gồm hai ứng dụng dùng chung một CSDL SQL Server `BookStore
 | Thành phần | Công nghệ | Người dùng |
 |---|---|---|
 | `BookStore.Web` – website bán sách | ASP.NET Core MVC (.NET 8) | Khách hàng |
-| `BookStore.Desktop` – phần mềm quản trị *(đang phát triển)* | WinForms (.NET 8) | Quản trị viên, nhân viên bán hàng, nhân viên kho |
+| `BookStore.Desktop` – phần mềm quản trị | WinForms (.NET 8) | Quản trị viên, nhân viên bán hàng, nhân viên kho |
 
 ## Cấu trúc solution
 
@@ -17,17 +17,20 @@ BookStore.sln
     ├── BookStore.Domain          Thực thể (Sach, DonHang, ...) và enum – không phụ thuộc thư viện nào
     ├── BookStore.Application     Nghiệp vụ: service, DTO, IAppDbContext (dùng chung cho Web và Desktop)
     ├── BookStore.Infrastructure  EF Core: BookStoreDbContext, migration, dữ liệu mẫu
-    └── BookStore.Web             Controller, View, View Component
+    ├── BookStore.Web             Controller, View, View Component
+    └── BookStore.Desktop         WinForms: đăng nhập, form chính (MDI), các form quản trị
 ```
 
 ## Chạy thử
 
-Yêu cầu: **.NET 8 SDK**, **SQL Server** (Express/Developer/LocalDB), Visual Studio 2022 hoặc VS Code.
+Yêu cầu: **.NET 8 SDK**, **SQL Server** (Express/Developer/LocalDB), Visual Studio 2022 trở lên (khuyên dùng, có Designer WinForms).
 
-1. Sửa chuỗi kết nối trong `src/BookStore.Web/appsettings.json` cho đúng máy của bạn, ví dụ:
-   - SQL Server mặc định: `Server=.;Database=BookStoreDB;Trusted_Connection=True;TrustServerCertificate=True`
-   - SQL Express: `Server=.\\SQLEXPRESS;Database=BookStoreDB;Trusted_Connection=True;TrustServerCertificate=True`
-   - LocalDB: `Server=(localdb)\\MSSQLLocalDB;Database=BookStoreDB;Trusted_Connection=True`
+1. **Chuỗi kết nối:** mặc định dùng **SQL Server LocalDB** (`(localdb)\\MSSQLLocalDB`, cài kèm Visual Studio).
+   Nếu máy bạn dùng SQL Server khác, **không sửa `appsettings.json`** mà tạo file `appsettings.Local.json`
+   (đã được .gitignore, không lên GitHub) đặt cạnh `appsettings.json` trong `src/BookStore.Web` và `src/BookStore.Desktop`:
+   ```json
+   { "ConnectionStrings": { "BookStoreDB": "Server=.\\SQLEXPRESS;Database=BookStoreDB;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=True" } }
+   ```
 2. Chạy project `BookStore.Web` (F5 trong Visual Studio, hoặc `dotnet run --project src/BookStore.Web`).
    Lần chạy đầu ứng dụng **tự tạo CSDL theo migration và nạp dữ liệu mẫu** (24 sách, 12 danh mục, 8 NXB).
 3. Tài khoản thử nghiệm (mật khẩu đều là `123456`):
@@ -38,6 +41,11 @@ Yêu cầu: **.NET 8 SDK**, **SQL Server** (Express/Developer/LocalDB), Visual S
 | `admin` | Quản trị viên | Desktop |
 | `nvbanhang` | Nhân viên bán hàng | Desktop |
 | `nvkho` | Nhân viên kho | Desktop |
+
+### Chạy phần mềm quản trị (Desktop)
+
+Chuỗi kết nối giống Web (LocalDB hoặc `appsettings.Local.json`), chọn `BookStore.Desktop` làm
+Startup Project rồi F5. Đăng nhập bằng `admin` / `123456`. Hướng dẫn thêm chức năng: [docs/HUONG_DAN_DESKTOP.md](docs/HUONG_DAN_DESKTOP.md).
 
 Khi thay đổi thực thể, tạo migration mới:
 
