@@ -7,6 +7,9 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Cấu hình riêng của từng máy (chuỗi kết nối...), KHÔNG đưa lên Git – xem README
+builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+
 // Ghi log ra console và file logs/web-<ngày>.log (mục 4.5 – Thiết kế thích ứng)
 builder.Host.UseSerilog((ctx, cfg) => cfg
     .ReadFrom.Configuration(ctx.Configuration)

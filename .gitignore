@@ -485,3 +485,6 @@ $RECYCLE.BIN/
 
 # Log của Serilog
 logs/
+
+# Cấu hình riêng từng máy (chuỗi kết nối)
+appsettings.Local.json

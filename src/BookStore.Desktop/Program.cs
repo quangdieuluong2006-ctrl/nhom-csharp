@@ -22,6 +22,9 @@ internal static class Program
         {
             ContentRootPath = AppContext.BaseDirectory
         });
+        // Cấu hình riêng của từng máy (chuỗi kết nối...), KHÔNG đưa lên Git – xem README
+        builder.Configuration.AddJsonFile(Path.Combine(AppContext.BaseDirectory, "appsettings.Local.json"), optional: true);
+
         builder.Services.AddSerilog(cfg => cfg
             .ReadFrom.Configuration(builder.Configuration)
             .WriteTo.File(Path.Combine(AppContext.BaseDirectory, "logs", "desktop-.log"),
