@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using BookStore.Application.Common;
 using BookStore.Application.Dtos;
 using BookStore.Application.Services;
@@ -5,6 +6,7 @@ using BookStore.Domain.Enums;
 using BookStore.Web.Infrastructure;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookStore.Web.Controllers;
@@ -81,6 +83,60 @@ public class TaiKhoanController : Controller
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return RedirectToAction("Index", "Home");
+    }
+
+    // ===================== Tài khoản của tôi =====================
+
+    private int MaTaiKhoan => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+    [HttpGet, Authorize(Roles = "KhachHang")]
+    public async Task<IActionResult> HoSo()
+    {
+        var hoSo = await _svc.LayHoSoAsync(MaTaiKhoan);
+        return hoSo is null ? NotFound() : View(hoSo);
+    }
+
+    [HttpPost, Authorize(Roles = "KhachHang")]
+    public async Task<IActionResult> HoSo(HoSoKhachHangDto dto)
+    {
+        dto.TenDangNhap = User.Identity!.Name!;
+        if (!ModelState.IsValid) return View(dto);
+        try
+        {
+            await _svc.CapNhatHoSoAsync(MaTaiKhoan, dto);
+            // Họ tên hiển thị nằm trong cookie (claim) → đăng nhập lại để cookie có tên mới
+            var nd = new NguoiDungDto(MaTaiKhoan, dto.TenDangNhap, dto.HoTen.Trim(), VaiTro.KhachHang, User.MaKhachHang());
+            var ghiNho = (await HttpContext.AuthenticateAsync()).Properties?.IsPersistent ?? false;
+            await DangNhapCookieAsync(nd, ghiNho);
+            TempData["ThongBao"] = "Đã cập nhật thông tin tài khoản.";
+            return RedirectToAction(nameof(HoSo));
+        }
+        catch (BusinessException ex)
+        {
+            ModelState.AddModelError(string.Empty, ex.Message);
+            return View(dto);
+        }
+    }
+
+    [HttpGet, Authorize(Roles = "KhachHang")]
+    public IActionResult DoiMatKhau() => View(new DoiMatKhauDto());
+
+    [HttpPost, Authorize(Roles = "KhachHang")]
+    public async Task<IActionResult> DoiMatKhau(DoiMatKhauDto dto)
+    {
+        if (!ModelState.IsValid) return View(dto);
+        try
+        {
+            await _svc.DoiMatKhauAsync(MaTaiKhoan, dto.MatKhauCu, dto.MatKhauMoi);
+            _log.LogInformation("Tài khoản {MaTaiKhoan} đổi mật khẩu", MaTaiKhoan);
+            TempData["ThongBao"] = "Đổi mật khẩu thành công.";
+            return RedirectToAction(nameof(HoSo));
+        }
+        catch (BusinessException ex)
+        {
+            ModelState.AddModelError(string.Empty, ex.Message);
+            return View(new DoiMatKhauDto());
+        }
     }
 
     private Task DangNhapCookieAsync(NguoiDungDto nd, bool ghiNho) =>

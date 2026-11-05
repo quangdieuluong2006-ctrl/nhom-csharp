@@ -38,6 +38,7 @@
                                 <i class="bi bi-person-circle"></i> @User.HoTen()
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" asp-controller="TaiKhoan" asp-action="HoSo"><i class="bi bi-person"></i> Tài khoản của tôi</a></li>
                                 <li><a class="dropdown-item" asp-controller="DonHang" asp-action="Index"><i class="bi bi-receipt"></i> Đơn hàng của tôi</a></li>
                                 <li><hr class="dropdown-divider" /></li>
                                 <li>
@@ -61,11 +62,25 @@
 
 <div class="container my-4">
     <div class="row g-4">
-        <aside class="col-lg-3 d-none d-lg-block">
-            @await Component.InvokeAsync("MenuDanhMuc")
-            @await Component.InvokeAsync("MenuNhaXuatBan")
+        @* Màn hình lớn: menu là cột bên trái. Điện thoại/máy tính bảng (< 992px): menu thành ngăn kéo trượt (offcanvas)
+           mở bằng nút "Danh mục" – chỉ render một lần, không truy vấn CSDL hai lần. *@
+        <aside class="col-lg-3">
+            <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="menuTrai" aria-labelledby="menuTraiTieuDe">
+                <div class="offcanvas-header">
+                    <h2 class="offcanvas-title h5" id="menuTraiTieuDe">Danh mục sách</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#menuTrai" aria-label="Đóng"></button>
+                </div>
+                <div class="offcanvas-body d-block">
+                    @await Component.InvokeAsync("MenuDanhMuc")
+                    @await Component.InvokeAsync("MenuNhaXuatBan")
+                </div>
+            </div>
         </aside>
         <main class="col-lg-9" role="main">
+            <button class="btn btn-outline-secondary btn-sm d-lg-none mb-3" type="button" data-bs-toggle="offcanvas"
+                    data-bs-target="#menuTrai" aria-controls="menuTrai">
+                <i class="bi bi-list"></i> Danh mục &amp; nhà xuất bản
+            </button>
             @if (TempData["ThongBao"] is string tb)
             {
                 <div class="alert alert-success alert-dismissible fade show" role="alert">

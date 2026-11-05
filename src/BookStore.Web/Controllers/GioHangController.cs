@@ -38,7 +38,7 @@ public class GioHangController : Controller
         return Url.IsLocalUrl(returnUrl) ? Redirect(returnUrl!) : RedirectToAction(nameof(Index));
     }
 
-    /// <summary>Cập nhật số lượng của một dòng; số lượng ≤ 0 thì xóa dòng.</summary>
+    /// <summary>Cập nhật số lượng của một dòng (US02: không cho nhỏ hơn 1 – muốn bỏ sách thì dùng nút Xóa).</summary>
     [HttpPost]
     public async Task<IActionResult> CapNhat(int maSach, int soLuong)
     {
@@ -46,18 +46,28 @@ public class GioHangController : Controller
         var dong = gio.Dong.FirstOrDefault(d => d.MaSach == maSach);
         if (dong is null) return RedirectToAction(nameof(Index));
 
-        if (soLuong <= 0)
+        if (soLuong < 1)
+        {
+            TempData["Loi"] = "Số lượng tối thiểu là 1. Muốn bỏ sách khỏi giỏ, hãy bấm nút Xóa.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var sach = await _sach.LayChiTietAsync(maSach);
+        int ton = sach?.SoLuongTon ?? 0;
+        if (ton == 0)
+        {
+            // Sách vừa hết hàng hoặc ngừng kinh doanh sau khi khách bỏ vào giỏ
             gio.Dong.Remove(dong);
+            TempData["Loi"] = $"“{dong.TenSach}” đã hết hàng nên được bỏ khỏi giỏ.";
+        }
+        else if (soLuong > ton)
+        {
+            dong.SoLuong = ton;
+            TempData["Loi"] = $"Kho chỉ còn {ton} cuốn “{dong.TenSach}”.";
+        }
         else
         {
-            var sach = await _sach.LayChiTietAsync(maSach);
-            int ton = sach?.SoLuongTon ?? 0;
-            if (soLuong > ton)
-            {
-                TempData["Loi"] = $"Kho chỉ còn {ton} cuốn “{dong.TenSach}”.";
-                soLuong = ton;
-            }
-            if (soLuong == 0) gio.Dong.Remove(dong); else dong.SoLuong = soLuong;
+            dong.SoLuong = soLuong;
         }
         gio.Luu(HttpContext.Session);
         return RedirectToAction(nameof(Index));

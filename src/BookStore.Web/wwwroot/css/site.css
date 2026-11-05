@@ -34,3 +34,13 @@ a:hover { color: var(--gold-dark); }
 .steps li.done { color: var(--brand); font-weight: 600; }
 .steps li.done::before { background: var(--gold); color: #1f2933; }
 .steps li.done::after { background: var(--gold); }
+.btn-outline-gold { border-color: var(--gold); color: var(--gold-dark); }
+.btn-outline-gold:hover { background: var(--gold); color: #1f2933; }
+@media (max-width: 991.98px) {
+  .offcanvas-lg .side-menu { box-shadow: none; }
+}
+@media (max-width: 575.98px) {
+  .book-card .card-body { padding: .6rem !important; font-size: .88rem; }
+  .search-box { min-width: 0; width: 100%; }
+}
+.account-nav .list-group-item.active { background: var(--brand); border-color: var(--brand); }

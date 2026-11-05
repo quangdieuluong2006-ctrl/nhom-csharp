@@ -59,3 +59,48 @@ public class DangNhapDto
     [Display(Name = "Ghi nhớ đăng nhập")]
     public bool GhiNho { get; set; }
 }
+
+/// <summary>Thông tin liên hệ của khách hàng (bảng KHACHHANG) – trang "Tài khoản của tôi".</summary>
+public class HoSoKhachHangDto
+{
+    [Display(Name = "Tên đăng nhập")]
+    public string TenDangNhap { get; set; } = "";
+
+    [Required(ErrorMessage = "Vui lòng nhập họ tên")]
+    [StringLength(100, ErrorMessage = "Họ tên tối đa 100 ký tự")]
+    [Display(Name = "Họ và tên")]
+    public string HoTen { get; set; } = "";
+
+    [EmailAddress(ErrorMessage = "Email không hợp lệ")]
+    [StringLength(254)]
+    public string? Email { get; set; }
+
+    [Required(ErrorMessage = "Vui lòng nhập số điện thoại")]
+    [RegularExpression(@"^0\d{9,10}$", ErrorMessage = "Số điện thoại gồm 10–11 chữ số, bắt đầu bằng 0")]
+    [Display(Name = "Số điện thoại")]
+    public string SoDienThoai { get; set; } = "";
+
+    [StringLength(255)]
+    [Display(Name = "Địa chỉ giao hàng mặc định")]
+    public string? DiaChi { get; set; }
+}
+
+public class DoiMatKhauDto
+{
+    [Required(ErrorMessage = "Vui lòng nhập mật khẩu hiện tại")]
+    [DataType(DataType.Password)]
+    [Display(Name = "Mật khẩu hiện tại")]
+    public string MatKhauCu { get; set; } = "";
+
+    [Required(ErrorMessage = "Vui lòng nhập mật khẩu mới")]
+    [StringLength(100, MinimumLength = 6, ErrorMessage = "Mật khẩu mới phải có ít nhất 6 ký tự")]
+    [DataType(DataType.Password)]
+    [Display(Name = "Mật khẩu mới")]
+    public string MatKhauMoi { get; set; } = "";
+
+    [Required(ErrorMessage = "Vui lòng nhập lại mật khẩu mới")]
+    [Compare(nameof(MatKhauMoi), ErrorMessage = "Mật khẩu nhập lại không khớp")]
+    [DataType(DataType.Password)]
+    [Display(Name = "Nhập lại mật khẩu mới")]
+    public string NhapLaiMatKhauMoi { get; set; } = "";
+}
