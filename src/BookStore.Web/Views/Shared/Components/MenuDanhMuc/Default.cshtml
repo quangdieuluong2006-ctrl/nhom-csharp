@@ -1,0 +1,32 @@
+@model IReadOnlyList<MucMenuDto>
+@{
+    var dangChon = Context.Request.Query["danhmuc"].ToString();
+}
+<div class="card side-menu mb-4">
+    <div class="card-header"><i class="bi bi-grid"></i> Danh mục sách</div>
+    <ul class="list-group list-group-flush">
+        @foreach (var dm in Model)
+        {
+            <li class="list-group-item">
+                <a class="d-flex justify-content-between fw-semibold @(dangChon == dm.Ma.ToString() ? "active" : "")"
+                   asp-controller="Sach" asp-action="Index" asp-route-danhmuc="@dm.Ma">
+                    <span>@dm.Ten</span><span class="badge rounded-pill bg-light text-dark">@dm.SoSach</span>
+                </a>
+                @if (dm.Con.Count > 0)
+                {
+                    <ul class="list-unstyled ms-3 mt-1 mb-0">
+                        @foreach (var con in dm.Con)
+                        {
+                            <li>
+                                <a class="d-flex justify-content-between small py-1 @(dangChon == con.Ma.ToString() ? "active" : "")"
+                                   asp-controller="Sach" asp-action="Index" asp-route-danhmuc="@con.Ma">
+                                    <span>@con.Ten</span><span class="text-muted">@con.SoSach</span>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                }
+            </li>
+        }
+    </ul>
+</div>

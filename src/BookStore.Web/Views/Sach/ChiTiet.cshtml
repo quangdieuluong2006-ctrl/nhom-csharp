@@ -1,0 +1,76 @@
+@model SachChiTietDto
+@{
+    ViewData["Title"] = Model.TenSach;
+    var cungDanhMuc = ViewBag.CungDanhMuc as IReadOnlyList<SachTomTatDto> ?? Array.Empty<SachTomTatDto>();
+}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Sach" asp-action="Index" asp-route-danhmuc="@Model.MaDanhMuc">@Model.TenDanhMuc</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@Model.TenSach</li>
+    </ol>
+</nav>
+
+<div class="card p-3 p-md-4 mb-4">
+    <div class="row g-4">
+        <div class="col-md-5 text-center">
+            <img class="detail-cover img-fluid rounded shadow-sm" src="@(Model.HinhAnh ?? "/images/no-cover.svg")" alt="Bìa sách @Model.TenSach" />
+        </div>
+        <div class="col-md-7">
+            <h1 class="h4 fw-bold">@Model.TenSach</h1>
+            <table class="table table-sm table-borderless small mb-3 info">
+                <tr><th>Tác giả</th><td>@Model.TacGia</td></tr>
+                @if (Model.MaNhaXuatBan is int nxb)
+                {
+                    <tr><th>Nhà xuất bản</th><td><a asp-action="Index" asp-route-nxb="@nxb">@Model.TenNhaXuatBan</a></td></tr>
+                }
+                <tr><th>Danh mục</th><td><a asp-action="Index" asp-route-danhmuc="@Model.MaDanhMuc">@Model.TenDanhMuc</a></td></tr>
+                @if (Model.NamXuatBan is short nam) { <tr><th>Năm xuất bản</th><td>@nam</td></tr> }
+                @if (Model.ISBN is string isbn) { <tr><th>ISBN</th><td>@isbn</td></tr> }
+                <tr>
+                    <th>Tình trạng</th>
+                    <td>
+                        @if (Model.SoLuongTon > 0)
+                        {
+                            <span class="text-success"><i class="bi bi-check-circle"></i> Còn hàng (@Model.SoLuongTon cuốn)</span>
+                        }
+                        else
+                        {
+                            <span class="text-danger"><i class="bi bi-x-circle"></i> Tạm hết hàng</span>
+                        }
+                    </td>
+                </tr>
+            </table>
+            <div class="price fs-3 mb-3">@Model.DonGia.ToString("N0") đ</div>
+
+            @if (Model.SoLuongTon > 0)
+            {
+                @* Thêm vào giỏ hàng (Lab05) – form POST, có chống giả mạo yêu cầu (anti-forgery token) *@
+                <form method="post" asp-controller="GioHang" asp-action="Them" class="d-flex gap-2 align-items-center">
+                    <input type="hidden" name="maSach" value="@Model.MaSach" />
+                    <label for="soLuong" class="small">Số lượng</label>
+                    <input id="soLuong" type="number" name="soLuong" value="1" min="1" max="@Model.SoLuongTon"
+                           class="form-control form-control-sm" style="width:90px" />
+                    <button type="submit" class="btn btn-gold"><i class="bi bi-cart-plus"></i> Thêm vào giỏ</button>
+                </form>
+            }
+        </div>
+    </div>
+    @if (!string.IsNullOrWhiteSpace(Model.MoTa))
+    {
+        <hr />
+        <h2 class="h6 fw-bold">Giới thiệu sách</h2>
+        <p class="mb-0">@Model.MoTa</p>
+    }
+</div>
+
+@if (cungDanhMuc.Count > 0)
+{
+    <h2 class="h5 section-title mb-3">Sách cùng danh mục</h2>
+    <div class="row row-cols-2 row-cols-md-4 g-3">
+        @foreach (var s in cungDanhMuc)
+        {
+            <div class="col"><partial name="_TheSach" model="s" /></div>
+        }
+    </div>
+}

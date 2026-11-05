@@ -1,0 +1,18 @@
+@model IReadOnlyList<MucMenuDto>
+@{
+    var dangChon = Context.Request.Query["nxb"].ToString();
+}
+<div class="card side-menu mb-4">
+    <div class="card-header"><i class="bi bi-building"></i> Nhà xuất bản</div>
+    <ul class="list-group list-group-flush">
+        @foreach (var n in Model)
+        {
+            <li class="list-group-item">
+                <a class="d-flex justify-content-between small @(dangChon == n.Ma.ToString() ? "active" : "")"
+                   asp-controller="Sach" asp-action="Index" asp-route-nxb="@n.Ma">
+                    <span>@n.Ten</span><span class="text-muted">@n.SoSach</span>
+                </a>
+            </li>
+        }
+    </ul>
+</div>
