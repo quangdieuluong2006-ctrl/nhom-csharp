@@ -1,0 +1,56 @@
+@model ThongTinNhanHangDto
+@{
+    ViewData["Title"] = "Đặt hàng";
+    var gio = (GioHang)ViewBag.GioHang;
+}
+<h1 class="h5 section-title mb-3">Thông tin đặt hàng</h1>
+<div class="row g-4">
+    <div class="col-md-7">
+        <div class="card p-4">
+            <form method="post" asp-action="XacNhan" id="formDatHang">
+                <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
+                <div class="mb-3">
+                    <label asp-for="HoTenNhan" class="form-label"></label>
+                    <input asp-for="HoTenNhan" class="form-control" />
+                    <span asp-validation-for="HoTenNhan" class="text-danger small"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="SoDienThoaiNhan" class="form-label"></label>
+                    <input asp-for="SoDienThoaiNhan" class="form-control" />
+                    <span asp-validation-for="SoDienThoaiNhan" class="text-danger small"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="DiaChiGiaoHang" class="form-label"></label>
+                    <input asp-for="DiaChiGiaoHang" class="form-control" />
+                    <span asp-validation-for="DiaChiGiaoHang" class="text-danger small"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="GhiChu" class="form-label"></label>
+                    <textarea asp-for="GhiChu" class="form-control" rows="2" placeholder="Ví dụ: giao giờ hành chính"></textarea>
+                </div>
+                <div class="alert alert-light border small mb-3">
+                    <i class="bi bi-cash-coin"></i> Phương thức thanh toán: <strong>Thanh toán khi nhận hàng (COD)</strong>
+                </div>
+                <button type="submit" class="btn btn-gold w-100"><i class="bi bi-check2-circle"></i> Xác nhận đặt hàng</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-md-5">
+        <div class="card p-3">
+            <h2 class="h6 fw-bold">Đơn hàng (@gio.TongSoLuong cuốn)</h2>
+            <ul class="list-unstyled small mb-2">
+                @foreach (var d in gio.Dong)
+                {
+                    <li class="d-flex justify-content-between border-bottom py-2">
+                        <span>@d.TenSach <span class="text-muted">× @d.SoLuong</span></span>
+                        <span>@HienThi.Tien(d.ThanhTien)</span>
+                    </li>
+                }
+            </ul>
+            <div class="d-flex justify-content-between"><span>Phí vận chuyển</span><span>Miễn phí</span></div>
+            <div class="d-flex justify-content-between fs-5 mt-2"><strong>Tổng cộng</strong><span class="price">@HienThi.Tien(gio.TongTien)</span></div>
+            <a asp-controller="GioHang" asp-action="Index" class="small mt-2">← Sửa giỏ hàng</a>
+        </div>
+    </div>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

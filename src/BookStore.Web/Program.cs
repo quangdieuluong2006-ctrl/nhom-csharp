@@ -2,6 +2,7 @@ using System.Globalization;
 using BookStore.Application.Services;
 using BookStore.Infrastructure;
 using BookStore.Infrastructure.Data;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -19,8 +20,31 @@ builder.Services.AddInfrastructure(builder.Configuration.GetConnectionString("Bo
     ?? throw new InvalidOperationException("Thiếu chuỗi kết nối 'BookStoreDB' trong appsettings.json"));
 builder.Services.AddScoped<ISachService, SachService>();
 builder.Services.AddScoped<IDanhMucService, DanhMucService>();
+builder.Services.AddScoped<ITaiKhoanService, TaiKhoanService>();
+builder.Services.AddScoped<IDonHangService, DonHangService>();
 
-builder.Services.AddControllersWithViews();
+// Giỏ hàng lưu trong Session (Lab05); cookie session chỉ đọc được từ server (HttpOnly)
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(o =>
+{
+    o.IdleTimeout = TimeSpan.FromHours(2);
+    o.Cookie.HttpOnly = true;
+    o.Cookie.IsEssential = true;
+});
+
+// Đăng nhập bằng cookie (thay Session["Taikhoan"] của Lab04)
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(o =>
+    {
+        o.LoginPath = "/TaiKhoan/DangNhap";
+        o.AccessDeniedPath = "/Loi/403";
+        o.ExpireTimeSpan = TimeSpan.FromDays(7);
+        o.SlidingExpiration = true;
+    });
+
+// Mọi form POST đều phải kèm anti-forgery token (chống tấn công CSRF)
+builder.Services.AddControllersWithViews(o =>
+    o.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute()));
 
 var app = builder.Build();
 
@@ -52,6 +76,8 @@ app.UseSerilogRequestLogging();
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+app.UseSession();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}");

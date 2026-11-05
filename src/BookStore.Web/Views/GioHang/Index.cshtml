@@ -1,0 +1,65 @@
+@model GioHang
+@{
+    ViewData["Title"] = "Giỏ hàng";
+}
+<h1 class="h5 section-title mb-3">Giỏ hàng của bạn</h1>
+
+@if (Model.Dong.Count == 0)
+{
+    <div class="card text-center py-5">
+        <i class="bi bi-cart-x fs-1 text-muted"></i>
+        <p class="mt-2">Giỏ hàng đang trống.</p>
+        <div><a class="btn btn-gold" asp-controller="Sach" asp-action="Index">Tiếp tục mua sắm</a></div>
+    </div>
+}
+else
+{
+    <div class="card mb-3">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 cart-table">
+                <thead class="table-light">
+                    <tr><th>Sách</th><th class="text-end">Đơn giá</th><th style="width:150px">Số lượng</th><th class="text-end">Thành tiền</th><th></th></tr>
+                </thead>
+                <tbody>
+                @foreach (var d in Model.Dong)
+                {
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <img src="@(d.HinhAnh ?? "/images/no-cover.svg")" alt="" class="cart-thumb" />
+                                <a asp-controller="Sach" asp-action="ChiTiet" asp-route-id="@d.MaSach">@d.TenSach</a>
+                            </div>
+                        </td>
+                        <td class="text-end">@HienThi.Tien(d.DonGia)</td>
+                        <td>
+                            <form method="post" asp-action="CapNhat" class="d-flex gap-1">
+                                <input type="hidden" name="maSach" value="@d.MaSach" />
+                                <input type="number" name="soLuong" value="@d.SoLuong" min="0" class="form-control form-control-sm" aria-label="Số lượng" />
+                                <button class="btn btn-sm btn-outline-secondary" title="Cập nhật"><i class="bi bi-arrow-repeat"></i><span class="visually-hidden">Cập nhật</span></button>
+                            </form>
+                        </td>
+                        <td class="text-end fw-semibold">@HienThi.Tien(d.ThanhTien)</td>
+                        <td class="text-end">
+                            <form method="post" asp-action="Xoa">
+                                <input type="hidden" name="maSach" value="@d.MaSach" />
+                                <button class="btn btn-sm btn-outline-danger" title="Xóa khỏi giỏ"><i class="bi bi-trash"></i><span class="visually-hidden">Xóa</span></button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <form method="post" asp-action="XoaTatCa" onsubmit="return confirm('Xóa toàn bộ giỏ hàng?')">
+            <button class="btn btn-outline-danger btn-sm"><i class="bi bi-x-circle"></i> Xóa tất cả</button>
+        </form>
+        <div class="text-end">
+            <div>Tổng số lượng: <strong>@Model.TongSoLuong</strong> cuốn</div>
+            <div class="fs-5">Tổng tiền: <span class="price">@HienThi.Tien(Model.TongTien)</span></div>
+            <a class="btn btn-gold mt-2" asp-controller="DatHang" asp-action="Index"><i class="bi bi-bag-check"></i> Đặt hàng</a>
+        </div>
+    </div>
+}
