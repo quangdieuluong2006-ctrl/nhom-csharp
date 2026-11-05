@@ -1,0 +1,15 @@
+@{
+    var action = ViewContext.RouteData.Values["action"]?.ToString();
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+}
+<div class="list-group account-nav mb-3">
+    <a class="list-group-item list-group-item-action @(action == "HoSo" ? "active" : "")" asp-controller="TaiKhoan" asp-action="HoSo">
+        <i class="bi bi-person"></i> Thông tin tài khoản
+    </a>
+    <a class="list-group-item list-group-item-action @(action == "DoiMatKhau" ? "active" : "")" asp-controller="TaiKhoan" asp-action="DoiMatKhau">
+        <i class="bi bi-shield-lock"></i> Đổi mật khẩu
+    </a>
+    <a class="list-group-item list-group-item-action @(controller == "DonHang" ? "active" : "")" asp-controller="DonHang" asp-action="Index">
+        <i class="bi bi-receipt"></i> Đơn hàng của tôi
+    </a>
+</div>

@@ -1,0 +1,44 @@
+@model HoSoKhachHangDto
+@{
+    ViewData["Title"] = "Tài khoản của tôi";
+}
+<h1 class="h5 section-title mb-3">Tài khoản của tôi</h1>
+<div class="row g-3">
+    <div class="col-md-4"><partial name="_MenuTaiKhoan" /></div>
+    <div class="col-md-8">
+        <div class="card p-4">
+            <form method="post" asp-action="HoSo">
+                <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
+                <div class="mb-3">
+                    <label asp-for="TenDangNhap" class="form-label"></label>
+                    <input asp-for="TenDangNhap" class="form-control" readonly disabled />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="HoTen" class="form-label"></label>
+                    <input asp-for="HoTen" class="form-control" autocomplete="name" />
+                    <span asp-validation-for="HoTen" class="text-danger small"></span>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-sm-6">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" class="form-control" autocomplete="email" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+                    <div class="col-sm-6">
+                        <label asp-for="SoDienThoai" class="form-label"></label>
+                        <input asp-for="SoDienThoai" class="form-control" autocomplete="tel" />
+                        <span asp-validation-for="SoDienThoai" class="text-danger small"></span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="DiaChi" class="form-label"></label>
+                    <input asp-for="DiaChi" class="form-control" autocomplete="street-address" />
+                    <span asp-validation-for="DiaChi" class="text-danger small"></span>
+                    <div class="form-text">Được điền sẵn khi đặt hàng. Thay đổi ở đây không ảnh hưởng các đơn đã đặt.</div>
+                </div>
+                <button type="submit" class="btn btn-gold"><i class="bi bi-save"></i> Lưu thay đổi</button>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
