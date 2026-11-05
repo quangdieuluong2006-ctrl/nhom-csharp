@@ -1,0 +1,8 @@
+@model GioHang
+<a class="btn btn-outline-light btn-sm position-relative" asp-controller="GioHang" asp-action="Index" title="Giỏ hàng">
+    <i class="bi bi-cart3"></i> Giỏ hàng
+    @if (Model.TongSoLuong > 0)
+    {
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">@Model.TongSoLuong</span>
+    }
+</a>

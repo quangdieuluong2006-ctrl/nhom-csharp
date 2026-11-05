@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="440" viewBox="0 0 300 440" font-family="Georgia, 'Times New Roman', serif">
+<rect width="300" height="440" fill="#5b2333"/><rect x="0" y="0" width="14" height="440" fill="#000" opacity=".18"/>
+<rect x="30" y="40" width="240" height="360" fill="none" stroke="#f7f4f3" stroke-width="2" opacity=".7"/>
+<circle cx="150" cy="96" r="18" fill="none" stroke="#f7f4f3" stroke-width="2"/><text x="150" y="150" font-size="26" font-weight="700" text-anchor="middle" fill="#f7f4f3">ĐẮC NHÂN TÂM</text>
+<text x="150" y="350" font-size="17" text-anchor="middle" fill="#f7f4f3" font-style="italic">Dale Carnegie</text>
+<text x="150" y="380" font-size="12" text-anchor="middle" fill="#f7f4f3" opacity=".8">NXB Tổng hợp TP.HCM</text></svg>

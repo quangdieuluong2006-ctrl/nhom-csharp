@@ -1,0 +1,20 @@
+@model IReadOnlyList<SachTomTatDto>
+@{
+    ViewData["Title"] = "Trang chủ";
+}
+<section class="hero rounded-3 p-4 p-md-5 mb-4">
+    <h1 class="h3 fw-bold mb-2">Chào mừng đến với Nhà sách BookStore</h1>
+    <p class="mb-3">Hàng nghìn đầu sách văn học, kinh tế, kỹ năng, công nghệ… Đặt online, nhận sách tận nhà, thanh toán khi nhận hàng.</p>
+    <a class="btn btn-gold" asp-controller="Sach" asp-action="Index"><i class="bi bi-collection"></i> Xem tất cả sách</a>
+</section>
+
+<div class="d-flex justify-content-between align-items-end mb-3">
+    <h2 class="h5 section-title mb-0">Sách mới</h2>
+    <a asp-controller="Sach" asp-action="Index" class="small">Xem thêm <i class="bi bi-arrow-right"></i></a>
+</div>
+<div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3">
+    @foreach (var s in Model)
+    {
+        <div class="col"><partial name="_TheSach" model="s" /></div>
+    }
+</div>

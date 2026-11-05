@@ -1,0 +1,36 @@
+@model DonHangChiTietDto
+@{
+    ViewData["Title"] = $"Đơn hàng #{Model.MaDonHang}";
+    // Các bước của quy trình xử lý đơn (Web tạo → Desktop xác nhận → giao → hoàn thành)
+    var buoc = new[] { TrangThaiDonHang.ChoXacNhan, TrangThaiDonHang.DaXacNhan, TrangThaiDonHang.DangGiao, TrangThaiDonHang.HoanThanh };
+    int hienTai = Array.IndexOf(buoc, Model.TrangThai);
+}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a asp-action="Index">Đơn hàng của tôi</a></li>
+        <li class="breadcrumb-item active" aria-current="page">#@Model.MaDonHang</li>
+    </ol>
+</nav>
+<div class="card p-4">
+    @if (Model.TrangThai == TrangThaiDonHang.DaHuy)
+    {
+        <div class="alert alert-secondary">Đơn hàng đã bị hủy.</div>
+    }
+    else
+    {
+        <ol class="steps mb-4">
+            @for (int i = 0; i < buoc.Length; i++)
+            {
+                <li class="@(i <= hienTai ? "done" : "")">@HienThi.TrangThai(buoc[i]).Ten</li>
+            }
+        </ol>
+    }
+    <partial name="_ChiTietDon" model="Model" />
+    @if (Model.CoTheHuy)
+    {
+        <form method="post" asp-action="Huy" asp-route-id="@Model.MaDonHang" class="text-end"
+              onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn hàng này?')">
+            <button class="btn btn-outline-danger"><i class="bi bi-x-circle"></i> Hủy đơn hàng</button>
+        </form>
+    }
+</div>

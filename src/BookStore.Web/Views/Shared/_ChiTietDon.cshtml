@@ -1,0 +1,39 @@
+@* Bảng chi tiết một đơn hàng – dùng chung cho trang đặt hàng thành công và trang chi tiết đơn *@
+@model DonHangChiTietDto
+@{
+    var (ten, mau) = HienThi.TrangThai(Model.TrangThai);
+}
+<div class="row g-3 small mb-3">
+    <div class="col-md-6">
+        <div><span class="text-muted">Mã đơn:</span> <strong>#@Model.MaDonHang</strong></div>
+        <div><span class="text-muted">Ngày đặt:</span> @Model.NgayDat.ToString("dd/MM/yyyy HH:mm")</div>
+        @if (Model.NgayGiaoDuKien is DateTime ngay && Model.TrangThai != TrangThaiDonHang.DaHuy)
+        {
+            <div><span class="text-muted">Dự kiến giao:</span> @ngay.ToString("dd/MM/yyyy")</div>
+        }
+        <div><span class="text-muted">Trạng thái:</span> <span class="badge bg-@mau">@ten</span></div>
+        <div><span class="text-muted">Thanh toán:</span> @Model.PhuongThucThanhToan – @HienThi.ThanhToan(Model.TrangThaiThanhToan)</div>
+    </div>
+    <div class="col-md-6">
+        <div><span class="text-muted">Người nhận:</span> @Model.HoTenNhan – @Model.SoDienThoaiNhan</div>
+        <div><span class="text-muted">Địa chỉ:</span> @Model.DiaChiGiaoHang</div>
+        @if (!string.IsNullOrEmpty(Model.GhiChu)) { <div><span class="text-muted">Ghi chú:</span> @Model.GhiChu</div> }
+    </div>
+</div>
+<div class="table-responsive">
+    <table class="table table-sm align-middle">
+        <thead class="table-light"><tr><th>Sách</th><th class="text-end">Đơn giá</th><th class="text-center">SL</th><th class="text-end">Thành tiền</th></tr></thead>
+        <tbody>
+        @foreach (var c in Model.ChiTiets)
+        {
+            <tr>
+                <td><a asp-controller="Sach" asp-action="ChiTiet" asp-route-id="@c.MaSach">@c.TenSach</a></td>
+                <td class="text-end">@HienThi.Tien(c.DonGiaDat)</td>
+                <td class="text-center">@c.SoLuong</td>
+                <td class="text-end">@HienThi.Tien(c.ThanhTien)</td>
+            </tr>
+        }
+        </tbody>
+        <tfoot><tr><th colspan="3" class="text-end">Tổng tiền</th><th class="text-end price">@HienThi.Tien(Model.TongTien)</th></tr></tfoot>
+    </table>
+</div>

@@ -1,0 +1,16 @@
+@* Thẻ hiển thị một cuốn sách trên lưới – dùng chung cho trang chủ, danh sách và "sách cùng danh mục" *@
+@model SachTomTatDto
+<div class="card book-card h-100">
+    <a asp-controller="Sach" asp-action="ChiTiet" asp-route-id="@Model.MaSach" class="cover">
+        <img src="@(Model.HinhAnh ?? "/images/no-cover.svg")" alt="Bìa sách @Model.TenSach" loading="lazy" />
+        @if (Model.SoLuongTon == 0)
+        {
+            <span class="badge bg-secondary position-absolute top-0 end-0 m-2">Hết hàng</span>
+        }
+    </a>
+    <div class="card-body d-flex flex-column p-3">
+        <a asp-controller="Sach" asp-action="ChiTiet" asp-route-id="@Model.MaSach" class="title">@Model.TenSach</a>
+        <div class="small text-muted mb-2 text-truncate">@Model.TacGia</div>
+        <div class="mt-auto price">@Model.DonGia.ToString("N0") đ</div>
+    </div>
+</div>

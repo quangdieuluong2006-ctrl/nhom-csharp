@@ -1,0 +1,73 @@
+@model DanhSachSachViewModel
+@{
+    ViewData["Title"] = Model.TieuDe;
+    var loc = Model.Loc;
+}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@Model.TieuDe</li>
+    </ol>
+</nav>
+
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+    <div>
+        <h1 class="h5 section-title mb-1">@Model.TieuDe</h1>
+        <div class="small text-muted">Tìm thấy @Model.Sachs.TotalItemCount cuốn sách</div>
+    </div>
+    @* Bộ lọc giữ nguyên điều kiện hiện tại (danh mục / NXB / từ khóa) bằng các input ẩn *@
+    <form method="get" class="row g-2 align-items-center filter-bar">
+        <input type="hidden" name="tukhoa" value="@loc.TuKhoa" />
+        <input type="hidden" name="danhmuc" value="@loc.MaDanhMuc" />
+        <input type="hidden" name="nxb" value="@loc.MaNhaXuatBan" />
+        <div class="col-auto">
+            <select name="giaden" class="form-select form-select-sm" aria-label="Khoảng giá" onchange="this.form.submit()">
+                <option value="">Mọi mức giá</option>
+                <option value="50000" selected="@(loc.GiaDen == 50000)">Dưới 50.000 đ</option>
+                <option value="100000" selected="@(loc.GiaDen == 100000)">Dưới 100.000 đ</option>
+                <option value="200000" selected="@(loc.GiaDen == 200000)">Dưới 200.000 đ</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <select name="sapxep" class="form-select form-select-sm" aria-label="Sắp xếp" onchange="this.form.submit()">
+                <option value="MoiNhat" selected="@(loc.SapXep == SapXepSach.MoiNhat)">Mới nhất</option>
+                <option value="GiaTang" selected="@(loc.SapXep == SapXepSach.GiaTang)">Giá tăng dần</option>
+                <option value="GiaGiam" selected="@(loc.SapXep == SapXepSach.GiaGiam)">Giá giảm dần</option>
+                <option value="TenAZ" selected="@(loc.SapXep == SapXepSach.TenAZ)">Tên A → Z</option>
+            </select>
+        </div>
+    </form>
+</div>
+
+@if (Model.Sachs.Count == 0)
+{
+    <div class="alert alert-light border text-center py-5">
+        <i class="bi bi-search fs-2 d-block mb-2"></i>Không tìm thấy sách phù hợp. Hãy thử từ khóa khác.
+    </div>
+}
+else
+{
+    <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3">
+        @foreach (var s in Model.Sachs)
+        {
+            <div class="col"><partial name="_TheSach" model="s" /></div>
+        }
+    </div>
+
+    @* Phân trang (Lab07): giữ nguyên các tham số lọc khi chuyển trang *@
+    <div class="d-flex justify-content-center mt-4">
+        @Html.PagedListPager(Model.Sachs, trang => Url.Action("Index", new
+        {
+            tukhoa = loc.TuKhoa, danhmuc = loc.MaDanhMuc, nxb = loc.MaNhaXuatBan,
+            giaden = loc.GiaDen, sapxep = loc.SapXep, trang
+        }), new PagedListRenderOptions
+        {
+            UlElementClasses = new[] { "pagination", "pagination-sm" },
+            LiElementClasses = new[] { "page-item" },
+            PageClasses = new[] { "page-link" },
+            DisplayLinkToFirstPage = PagedListDisplayMode.Never,
+            DisplayLinkToLastPage = PagedListDisplayMode.Never,
+            MaximumPageNumbersToDisplay = 5
+        })
+    </div>
+}
