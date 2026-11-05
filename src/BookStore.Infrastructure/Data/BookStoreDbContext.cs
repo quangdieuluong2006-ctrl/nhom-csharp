@@ -2,7 +2,6 @@ using BookStore.Application.Common;
 using BookStore.Domain.Entities;
 using BookStore.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 
 namespace BookStore.Infrastructure.Data;
 
@@ -26,8 +25,19 @@ public class BookStoreDbContext : DbContext, IAppDbContext
     public DbSet<PhieuKho> PhieuKhos => Set<PhieuKho>();
     public DbSet<ChiTietPhieuKho> ChiTietPhieuKhos => Set<ChiTietPhieuKho>();
 
-    public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken ct = default) =>
-        Database.BeginTransactionAsync(ct);
+    /// <summary>
+    /// Vì đã bật EnableRetryOnFailure, giao tác do người dùng mở phải nằm trong execution strategy
+    /// để khi lỗi kết nối tạm thời, EF chạy lại TOÀN BỘ khối thao tác (không chạy lại nửa chừng).
+    /// </summary>
+    public Task<T> ThucThiTrongGiaoTacAsync<T>(Func<CancellationToken, Task<T>> thaoTac, CancellationToken ct = default) =>
+        Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            ChangeTracker.Clear(); // lần chạy lại không mang theo thực thể của lần thất bại trước
+            await using var tx = await Database.BeginTransactionAsync(ct);
+            var ketQua = await thaoTac(ct);
+            await tx.CommitAsync(ct);
+            return ketQua;
+        });
 
     protected override void OnModelCreating(ModelBuilder mb)
     {

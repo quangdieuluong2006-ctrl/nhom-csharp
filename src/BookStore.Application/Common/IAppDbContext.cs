@@ -1,6 +1,5 @@
 using BookStore.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 
 namespace BookStore.Application.Common;
 
@@ -24,5 +23,10 @@ public interface IAppDbContext
     DbSet<ChiTietPhieuKho> ChiTietPhieuKhos { get; }
 
     Task<int> SaveChangesAsync(CancellationToken ct = default);
-    Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Chạy một nhóm thao tác trong MỘT giao tác (transaction): tất cả thành công thì commit,
+    /// có lỗi thì rollback toàn bộ. Dùng cho đặt hàng, hủy đơn, lập phiếu kho.
+    /// </summary>
+    Task<T> ThucThiTrongGiaoTacAsync<T>(Func<CancellationToken, Task<T>> thaoTac, CancellationToken ct = default);
 }
