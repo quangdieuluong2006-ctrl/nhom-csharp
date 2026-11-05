@@ -1,10 +1,8 @@
 using System.Globalization;
 using BookStore.Application.Services;
 using BookStore.Infrastructure;
-using BookStore.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Localization;
-using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,12 +47,7 @@ builder.Services.AddControllersWithViews(o =>
 var app = builder.Build();
 
 // Tạo/cập nhật CSDL theo migration và nạp dữ liệu mẫu khi chạy lần đầu
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<BookStoreDbContext>();
-    await db.Database.MigrateAsync();
-    await DbSeeder.SeedAsync(db);
-}
+await app.Services.KhoiTaoCsdlAsync();
 
 if (!app.Environment.IsDevelopment())
 {
