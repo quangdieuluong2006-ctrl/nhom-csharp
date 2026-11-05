@@ -5,7 +5,8 @@ using Microsoft.EntityFrameworkCore;
 namespace BookStore.Infrastructure.Data;
 
 /// <summary>
-/// Tạo dữ liệu mẫu khi CSDL còn trống (chỉ chạy một lần): danh mục, NXB, tác giả, sách và tài khoản thử nghiệm.
+/// Tạo dữ liệu mẫu khi CSDL còn trống (chỉ chạy một lần): danh mục, NXB, tác giả, sách,
+/// tài khoản thử nghiệm (mỗi vai trò, 2 khách hàng) và phiếu nhập đầu kỳ.
 /// Mật khẩu mẫu của mọi tài khoản: 123456 (được băm bằng BCrypt).
 /// </summary>
 public static class DbSeeder
@@ -47,26 +48,36 @@ public static class DbSeeder
             db.Sachs.Add(s);
         }
 
-        // 4. Tài khoản thử nghiệm cho Web và Desktop
+        // 4. Tài khoản thử nghiệm: mỗi vai trò nhân viên một tài khoản và hai khách hàng
         string hash = BCrypt.Net.BCrypt.HashPassword("123456");
-        db.TaiKhoans.AddRange(
-            new TaiKhoan { TenDangNhap = "admin", MatKhauHash = hash, HoTen = "Quản trị viên", VaiTro = VaiTro.QuanTriVien },
+        var admin = new TaiKhoan { TenDangNhap = "admin", MatKhauHash = hash, HoTen = "Quản trị viên", VaiTro = VaiTro.QuanTriVien };
+        db.TaiKhoans.AddRange(admin,
             new TaiKhoan { TenDangNhap = "nvbanhang", MatKhauHash = hash, HoTen = "Nhân viên bán hàng", VaiTro = VaiTro.NhanVienBanHang },
-            new TaiKhoan { TenDangNhap = "nvkho", MatKhauHash = hash, HoTen = "Nhân viên kho", VaiTro = VaiTro.NhanVienKho });
-        var kh = new TaiKhoan
+            new TaiKhoan { TenDangNhap = "nvkho", MatKhauHash = hash, HoTen = "Nhân viên kho", VaiTro = VaiTro.NhanVienKho },
+            TaoKhachHang("khachhang", hash, "Nguyễn Văn An", "an.nguyen@example.com", "0901234567",
+                "273 An Dương Vương, Phường 3, Quận 5, TP.HCM"),
+            TaoKhachHang("khachhang2", hash, "Trần Thị Bình", "binh.tran@example.com", "0912345678",
+                "12 Nguyễn Trãi, Phường Bến Thành, Quận 1, TP.HCM"));
+
+        // 5. Phiếu nhập đầu kỳ: tồn kho ban đầu của mọi sách đều có chứng từ (tồn chỉ thay đổi qua phiếu kho/đơn hàng)
+        var phieu = new PhieuKho
         {
-            TenDangNhap = "khachhang", MatKhauHash = hash, HoTen = "Nguyễn Văn An", Email = "an.nguyen@example.com",
-            SoDienThoai = "0901234567", VaiTro = VaiTro.KhachHang
+            TaiKhoan = admin, LoaiPhieu = LoaiPhieuKho.Nhap, NgayLap = now.AddDays(-SachMauList.Length - 1),
+            GhiChu = "Nhập kho đầu kỳ (dữ liệu mẫu)"
         };
-        kh.KhachHang = new KhachHang
-        {
-            HoTen = kh.HoTen, Email = kh.Email, SoDienThoai = kh.SoDienThoai!,
-            DiaChi = "273 An Dương Vương, Phường 3, Quận 5, TP.HCM"
-        };
-        db.TaiKhoans.Add(kh);
+        foreach (var s in db.Sachs.Local.Where(s => s.SoLuongTon > 0))
+            phieu.ChiTiets.Add(new ChiTietPhieuKho { Sach = s, SoLuong = s.SoLuongTon, DonGiaNhap = Math.Round(s.DonGia * 0.7m / 1000) * 1000 });
+        db.PhieuKhos.Add(phieu);
 
         await db.SaveChangesAsync();
     }
+
+    /// <summary>Khách hàng: thông tin liên hệ lưu ở KHACHHANG; TAIKHOAN chỉ giữ tên đăng nhập, mật khẩu, tên hiển thị.</summary>
+    private static TaiKhoan TaoKhachHang(string ten, string hash, string hoTen, string email, string sdt, string diaChi) => new()
+    {
+        TenDangNhap = ten, MatKhauHash = hash, HoTen = hoTen, VaiTro = VaiTro.KhachHang,
+        KhachHang = new KhachHang { HoTen = hoTen, Email = email, SoDienThoai = sdt, DiaChi = diaChi }
+    };
 
     private static readonly (string Ten, string? Cha, string? MoTa)[] DanhMucMau =
     {
