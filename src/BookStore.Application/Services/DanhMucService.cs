@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BookStore.Application.Services;
 
-public interface IDanhMucService
+public partial interface IDanhMucService
 {
     Task<IReadOnlyList<MucMenuDto>> LayDanhMucAsync();
     Task<IReadOnlyList<MucMenuDto>> LayNhaXuatBanAsync();
@@ -13,7 +13,7 @@ public interface IDanhMucService
 }
 
 /// <summary>Dữ liệu cho menu trái: danh mục và nhà xuất bản (Lab 02).</summary>
-public class DanhMucService : IDanhMucService
+public partial class DanhMucService : IDanhMucService
 {
     private readonly IAppDbContext _db;
 

@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BookStore.Application.Services;
 
-public interface ISachService
+public partial interface ISachService
 {
     Task<IReadOnlyList<SachTomTatDto>> LaySachMoiAsync(int soLuong);
     Task<TrangKetQua<SachTomTatDto>> TimKiemAsync(LocSach loc);
@@ -14,7 +14,7 @@ public interface ISachService
 }
 
 /// <summary>Nghiệp vụ tra cứu sách phía người dùng (Lab 02, 03, 07). Chỉ trả về sách đang kinh doanh.</summary>
-public class SachService : ISachService
+public partial class SachService : ISachService
 {
     private readonly IAppDbContext _db;
 
