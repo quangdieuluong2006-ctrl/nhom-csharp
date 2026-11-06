@@ -20,11 +20,5 @@ public class PhienDangNhap
     /// <summary>Kiểm tra người dùng hiện tại có thuộc một trong các vai trò được phép không.</summary>
     public bool CoQuyen(params VaiTro[] vaiTros) => NguoiDung is not null && vaiTros.Contains(NguoiDung.VaiTro);
 
-    public static string TenVaiTro(VaiTro v) => v switch
-    {
-        VaiTro.QuanTriVien => "Quản trị viên",
-        VaiTro.NhanVienBanHang => "Nhân viên bán hàng",
-        VaiTro.NhanVienKho => "Nhân viên kho",
-        _ => "Khách hàng"
-    };
+    public static string TenVaiTro(VaiTro v) => v.Ten();
 }

@@ -18,7 +18,9 @@ BookStore.sln
     ├── BookStore.Application     Nghiệp vụ: service, DTO, IAppDbContext (dùng chung cho Web và Desktop)
     ├── BookStore.Infrastructure  EF Core: BookStoreDbContext, migration, dữ liệu mẫu
     ├── BookStore.Web             Controller, View, View Component
-    └── BookStore.Desktop         WinForms: đăng nhập, form chính (MDI), các form quản trị
+    └── BookStore.Desktop         WinForms: đăng nhập, phân quyền, các form quản trị
+tests
+└── BookStore.Tests               Kiểm thử tích hợp (xUnit) chạy trên SQL Server thật
 ```
 
 ## Chạy thử
@@ -70,6 +72,22 @@ Log ghi tại `src/BookStore.Web/logs/web-<ngày>.log` (Serilog).
 | – | Theo dõi đơn hàng | `DonHangController` – danh sách, chi tiết, khách tự hủy đơn chờ xác nhận |
 
 Lab08–09 (trang quản trị) được chuyển sang ứng dụng **Desktop WinForms** theo yêu cầu đề tài.
+
+## Chức năng Desktop (phần mềm quản trị)
+
+Đăng nhập và phân quyền 3 vai trò; tổng quan; quản lý sách, danh mục, NXB, tác giả; khách hàng; xử lý đơn hàng;
+lập phiếu kho, tồn kho; báo cáo doanh thu, sách bán chạy, xuất Excel; tài khoản và phân quyền.
+Chi tiết: [docs/HUONG_DAN_DESKTOP.md](docs/HUONG_DAN_DESKTOP.md).
+
+## Kiểm thử
+
+```bash
+dotnet test
+```
+
+31 ca kiểm thử tích hợp (UT01–UT10 trong báo cáo, quy trình liên thông, phân quyền, tranh chấp dữ liệu).
+Mặc định tạo CSDL tạm `BookStoreDB_KiemThu` trên LocalDB rồi xóa khi xong; đổi máy chủ bằng biến môi trường
+`BOOKSTORE_TEST_DB`. Trong Visual Studio: menu **Test → Run All Tests**.
 
 ## Quy trình nghiệp vụ liên thông Web ↔ Desktop
 

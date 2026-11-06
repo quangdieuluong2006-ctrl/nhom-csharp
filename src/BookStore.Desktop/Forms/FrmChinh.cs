@@ -1,73 +1,133 @@
+using BookStore.Application.Services;
 using BookStore.Desktop.HaTang;
 using BookStore.Domain.Enums;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace BookStore.Desktop.Forms;
 
 /// <summary>
-/// Form chính (MDI): menu chức năng hiển thị theo vai trò, các form nghiệp vụ mở bên trong.
-///
-/// CÁCH THÊM CHỨC NĂNG (xem thêm docs/HUONG_DAN_DESKTOP.md):
-///   1. Tạo form mới trong thư mục Forms, ví dụ FrmQuanLySach (nhận service qua constructor).
-///   2. Đăng ký trong Program.cs:  builder.Services.AddTransient&lt;FrmQuanLySach&gt;();
-///   3. Trong handler của mục menu tương ứng bên dưới, thay ChuaHienThuc(...) bằng  MoForm&lt;FrmQuanLySach&gt;();
+/// D02 – Form chính (MDI): menu hiển thị theo vai trò (ma trận chức năng – Bảng 3.13), các form nghiệp vụ mở bên trong.
+/// Thanh trạng thái hiển thị số đơn chờ xác nhận và báo khi có đơn mới từ website (kiểm tra mỗi 30 giây).
 /// </summary>
 public partial class FrmChinh : Form
 {
     private readonly IFormFactory _forms;
     private readonly PhienDangNhap _phien;
+    private readonly IServiceScopeFactory _scopes;
+    private readonly ILogger<FrmChinh> _log;
+    private int? _soDonChoTruoc;
 
     /// <summary>true nếu người dùng chọn Đăng xuất (Program sẽ hiện lại màn hình đăng nhập).</summary>
     public bool DaDangXuat { get; private set; }
 
-    public FrmChinh(IFormFactory forms, PhienDangNhap phien)
+    public FrmChinh(IFormFactory forms, PhienDangNhap phien, IServiceScopeFactory scopes, ILogger<FrmChinh> log)
     {
         InitializeComponent();
         _forms = forms;
         _phien = phien;
+        _scopes = scopes;
+        _log = log;
     }
 
-    private void FrmChinh_Load(object sender, EventArgs e)
+    private bool LaQuanTri => _phien.CoQuyen(VaiTro.QuanTriVien);
+    private bool LaBanHang => _phien.CoQuyen(VaiTro.QuanTriVien, VaiTro.NhanVienBanHang);
+    private bool LaKho => _phien.CoQuyen(VaiTro.QuanTriVien, VaiTro.NhanVienKho);
+
+    private async void FrmChinh_Load(object sender, EventArgs e)
     {
         var nd = _phien.NguoiDung!;
         lblNguoiDung.Text = $"Người dùng: {nd.HoTen} ({nd.TenDangNhap})";
-        lblVaiTro.Text = $"Vai trò: {PhienDangNhap.TenVaiTro(nd.VaiTro)}";
-        lblChao.Text = $"Xin chào {nd.HoTen}!";
+        lblVaiTro.Text = $"Vai trò: {nd.VaiTro.Ten()}";
+        Text = $"BookStore – Phần mềm quản trị – {nd.HoTen}";
         PhanQuyenMenu();
+        MoTongQuan();
+        if (LaBanHang)
+        {
+            await KiemTraDonMoiAsync();
+            tmrKiemTraDon.Start();
+        }
     }
 
     /// <summary>
-    /// Ẩn menu không thuộc quyền của vai trò hiện tại (theo bảng phân quyền trong báo cáo).
-    /// Lưu ý: ẩn menu chỉ là lớp bảo vệ giao diện; service vẫn nên kiểm tra lại quyền khi cần.
+    /// Ẩn chức năng không thuộc quyền của vai trò hiện tại (Bảng 3.13). Đây là lớp bảo vệ ở giao diện;
+    /// các service ở tầng nghiệp vụ vẫn kiểm tra lại quyền (QuyenHan.KiemTraAsync) – ca kiểm thử ST03.
     /// </summary>
     private void PhanQuyenMenu()
     {
-        mnuQuanTri.Visible = _phien.CoQuyen(VaiTro.QuanTriVien);
-        mnuDanhMuc.Visible = _phien.CoQuyen(VaiTro.QuanTriVien, VaiTro.NhanVienKho);
-        mnuKho.Visible = _phien.CoQuyen(VaiTro.QuanTriVien, VaiTro.NhanVienKho);
-        mnuDonHang.Visible = _phien.CoQuyen(VaiTro.QuanTriVien, VaiTro.NhanVienBanHang);
-        mnuBaoCao.Visible = _phien.CoQuyen(VaiTro.QuanTriVien, VaiTro.NhanVienBanHang);
+        // Danh mục: mọi nhân viên xem được danh sách sách; chỉ quản trị viên quản lý danh mục, NXB, tác giả
+        mnuDanhMucSach.Visible = mnuNhaXuatBan.Visible = mnuTacGia.Visible = sep2.Visible = LaQuanTri;
+        mnuBanHang.Visible = LaBanHang;
+        mnuKho.Visible = LaKho;
+        mnuBaoCao.Visible = LaBanHang;
+        mnuQuanTri.Visible = LaQuanTri;
     }
 
     /// <summary>Mở form con trong vùng MDI; nếu form đó đang mở thì chỉ đưa lên trước, không mở trùng.</summary>
-    private void MoForm<T>() where T : Form
+    private T MoForm<T>() where T : Form
     {
         var dangMo = MdiChildren.OfType<T>().FirstOrDefault();
         if (dangMo != null)
         {
             dangMo.Activate();
-            return;
+            return dangMo;
         }
         var f = _forms.Tao<T>();
         f.MdiParent = this;
         f.WindowState = FormWindowState.Maximized;
         f.Show();
+        return f;
     }
 
-    private static void ChuaHienThuc(string chucNang) =>
-        ThongBao.ThanhCong($"Chức năng “{chucNang}” đang được phát triển.");
+    private void MoTongQuan()
+    {
+        bool moiTao = !MdiChildren.OfType<FrmTongQuan>().Any();
+        var f = MoForm<FrmTongQuan>();
+        if (moiTao) f.YeuCauMoDon += MoDonHangAsync;
+    }
 
-    // ---------- Hệ thống ----------
-    private void mnuDoiMatKhau_Click(object sender, EventArgs e) => ChuaHienThuc("Đổi mật khẩu");
+    private async Task MoDonHangAsync(long maDon)
+    {
+        if (!LaBanHang) return;
+        await MoForm<FrmDonHang>().ChonDonAsync(maDon);
+    }
+
+    // ------------------------- Báo đơn mới từ website -------------------------
+
+    private async Task KiemTraDonMoiAsync()
+    {
+        using var scope = _scopes.CreateScope();
+        var tq = await scope.ServiceProvider.GetRequiredService<IBaoCaoService>().TongQuanAsync();
+        int soDon = tq.DonChoXacNhan;
+        lblDonCho.Text = soDon > 0 ? $"🔔 {soDon} đơn chờ xác nhận – nhấp để xử lý" : "Không có đơn chờ xác nhận";
+        lblDonCho.ForeColor = soDon > 0 ? Color.Firebrick : Color.DimGray;
+        if (_soDonChoTruoc is int truoc && soDon > truoc)
+        {
+            System.Media.SystemSounds.Asterisk.Play();
+            lblDonCho.Text = $"🔔 Có {soDon - truoc} đơn MỚI từ website · {soDon} đơn chờ xác nhận – nhấp để xử lý";
+        }
+        _soDonChoTruoc = soDon;
+    }
+
+    private async void tmrKiemTraDon_Tick(object? sender, EventArgs e)
+    {
+        try { await KiemTraDonMoiAsync(); }
+        catch (Exception ex) { _log.LogWarning(ex, "Kiểm tra đơn mới thất bại"); }
+    }
+
+    private void lblDonCho_Click(object? sender, EventArgs e)
+    {
+        if (LaBanHang) MoForm<FrmDonHang>();
+    }
+
+    // ---------------------------------- Hệ thống ----------------------------------
+    private void mnuTongQuan_Click(object sender, EventArgs e) => MoTongQuan();
+
+    private void mnuDoiMatKhau_Click(object sender, EventArgs e)
+    {
+        using var f = _forms.Tao<FrmDoiMatKhau>();
+        f.ShowDialog(this);
+    }
 
     private void mnuDangXuat_Click(object sender, EventArgs e)
     {
@@ -78,27 +138,25 @@ public partial class FrmChinh : Form
 
     private void mnuThoat_Click(object sender, EventArgs e) => Close();
 
-    // ---------- Quản trị (Quản trị viên) ----------
-    private void mnuTaiKhoan_Click(object sender, EventArgs e) => ChuaHienThuc("Quản lý tài khoản nhân viên");
+    // ---------------------------------- Danh mục ----------------------------------
+    private void mnuSach_Click(object sender, EventArgs e) => MoForm<FrmSach>();
+    private void mnuDanhMucSach_Click(object sender, EventArgs e) => MoForm<FrmDanhMuc>();
+    private void mnuNhaXuatBan_Click(object sender, EventArgs e) => MoForm<FrmNhaXuatBan>();
+    private void mnuTacGia_Click(object sender, EventArgs e) => MoForm<FrmTacGia>();
 
-    // ---------- Danh mục ----------
-    private void mnuDanhMucSach_Click(object sender, EventArgs e) => ChuaHienThuc("Danh mục sách");
-    private void mnuNhaXuatBan_Click(object sender, EventArgs e) => ChuaHienThuc("Nhà xuất bản");
-    private void mnuTacGia_Click(object sender, EventArgs e) => ChuaHienThuc("Tác giả");
-    private void mnuSach_Click(object sender, EventArgs e) => ChuaHienThuc("Quản lý sách");
+    // ---------------------------------- Bán hàng ----------------------------------
+    private void mnuDonHang_Click(object sender, EventArgs e) => MoForm<FrmDonHang>();
+    private void mnuKhachHang_Click(object sender, EventArgs e) => MoForm<FrmKhachHang>();
 
-    // ---------- Kho ----------
-    private void mnuPhieuKho_Click(object sender, EventArgs e) => ChuaHienThuc("Lập phiếu nhập/xuất kho");
-    private void mnuTonKho_Click(object sender, EventArgs e) => ChuaHienThuc("Tồn kho");
+    // ------------------------------------ Kho ------------------------------------
+    private void mnuPhieuKho_Click(object sender, EventArgs e) => MoForm<FrmPhieuKho>();
+    private void mnuTonKho_Click(object sender, EventArgs e) => MoForm<FrmKho>();
 
-    // ---------- Đơn hàng ----------
-    private void mnuXuLyDon_Click(object sender, EventArgs e) => ChuaHienThuc("Xử lý đơn hàng");
+    // ----------------------------- Báo cáo, Quản trị -----------------------------
+    private void mnuDoanhThu_Click(object sender, EventArgs e) => MoForm<FrmBaoCao>();
+    private void mnuTaiKhoan_Click(object sender, EventArgs e) => MoForm<FrmTaiKhoan>();
 
-    // ---------- Báo cáo ----------
-    private void mnuDoanhThu_Click(object sender, EventArgs e) => ChuaHienThuc("Báo cáo doanh thu");
-    private void mnuSachBanChay_Click(object sender, EventArgs e) => ChuaHienThuc("Sách bán chạy");
-
-    // ---------- Cửa sổ ----------
+    // ---------------------------------- Cửa sổ ----------------------------------
     private void mnuXepCuaSo_Click(object sender, EventArgs e) => LayoutMdi(MdiLayout.Cascade);
 
     private void mnuDongTatCa_Click(object sender, EventArgs e)

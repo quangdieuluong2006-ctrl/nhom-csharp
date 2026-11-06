@@ -1,94 +1,59 @@
-# Hướng dẫn thêm chức năng vào phần mềm quản trị (BookStore.Desktop)
+# Phần mềm quản trị (BookStore.Desktop)
 
-Khung Desktop đã có sẵn: đăng nhập, form chính (MDI) với menu theo vai trò, kết nối CSDL, ghi log.
-Mỗi thành viên chỉ cần **thêm form của mình** và **gắn vào menu**.
+Ứng dụng Windows Forms (.NET 8) cho nhân viên cửa hàng. Dùng chung tầng nghiệp vụ `BookStore.Application`
+và CSDL `BookStoreDB` với website, nên mọi thay đổi ở Desktop được Web thấy ngay và ngược lại.
 
-## Cấu trúc
+## Các màn hình (theo báo cáo mục 3.9)
+
+| Mã | Form | Chức năng | Vai trò |
+|---|---|---|---|
+| D01 | `FrmDangNhap` | Đăng nhập, từ chối tài khoản khách/khóa | Mọi nhân viên |
+| D02 | `FrmChinh`, `FrmTongQuan` | Menu theo vai trò, tổng quan số liệu, báo đơn mới từ website, đổi mật khẩu, đăng xuất | Mọi nhân viên |
+| D03 | `FrmSach` | Tìm/lọc sách; thêm, sửa, ngừng kinh doanh, ảnh bìa, tác giả; xuất Excel | QTV (sửa), NVBH/NVK (xem) |
+| D04 | `FrmDanhMuc`, `FrmNhaXuatBan`, `FrmTacGia` | Thêm/sửa/xóa/tìm; đang dùng thì chỉ ngừng dùng | QTV |
+| D05 | `FrmKhachHang` | Tra cứu, cập nhật khách hàng, xem đơn của khách | QTV, NVBH |
+| D06 | `FrmDonHang` | Lọc đơn, xác nhận → đang giao → hoàn thành, hủy (hoàn kho), tự làm mới 30 giây | QTV, NVBH |
+| D07 | `FrmPhieuKho`, `FrmKho` | Lập phiếu nhập/xuất/điều chỉnh nhiều dòng; tồn kho, sách sắp hết, lịch sử phiếu | QTV, NVK |
+| D08 | `FrmTaiKhoan` | Tạo tài khoản nhân viên, phân vai trò, khóa/mở khóa, đặt lại mật khẩu | QTV |
+| D09 | `FrmBaoCao` | Doanh thu theo ngày (biểu đồ), sách bán chạy, xuất Excel | QTV, NVBH |
+
+Tài khoản thử: `admin`, `nvbanhang`, `nvkho` – mật khẩu `123456`.
+
+## Quy trình liên thông Web ↔ Desktop (báo cáo mục 4.3.4)
+
+1. Khách đặt hàng trên Web → đơn **Chờ xác nhận**, tồn kho bị trừ.
+2. Desktop: thanh trạng thái báo "Có đơn MỚI từ website" (kiểm tra mỗi 30 giây); màn hình Tổng quan liệt kê đơn chờ.
+3. Nhân viên bán hàng mở **Bán hàng → Xử lý đơn hàng** (F3), xác nhận → đang giao → hoàn thành (tự ghi "Đã thanh toán").
+4. Khách mở **Đơn hàng của tôi** trên Web thấy trạng thái mới; nút Hủy đơn biến mất khi đơn đã được xác nhận.
+
+Nếu khách vừa hủy đơn trên Web đúng lúc nhân viên bấm xác nhận, lệnh xác nhận bị từ chối (UPDATE có điều kiện)
+và nhân viên được yêu cầu tải lại – dữ liệu không bị ghi đè.
+
+## Cấu trúc mã
 
 ```
 src/BookStore.Desktop
-├── Program.cs              Cấu hình DI, đăng ký service và form, vòng đăng nhập/đăng xuất
-├── appsettings.json        Chuỗi kết nối CSDL (sửa cho đúng máy của bạn)
-├── HaTang/
+├── Program.cs              DI (Generic Host), đăng ký service và form, vòng đăng nhập/đăng xuất
+├── appsettings.json        Chuỗi kết nối; "ThuMucAnhWeb" (tùy chọn) – thư mục wwwroot của Web để lưu ảnh bìa
+├── HaTang/                 Hạ tầng giao diện dùng chung
 │   ├── PhienDangNhap.cs    Người đang đăng nhập, kiểm tra quyền: _phien.CoQuyen(VaiTro.QuanTriVien)
 │   ├── FormFactory.cs      Tạo form qua DI, mỗi form một DbContext riêng
-│   ├── ThongBao.cs         ThongBao.ThanhCong / Loi / CanhBao / XacNhan
-│   └── XuLyLoi.cs          Bắt lỗi toàn cục, ghi log logs/desktop-*.log
-└── Forms/
-    ├── FrmDangNhap         Đăng nhập (chỉ nhân viên, quản trị viên)
-    └── FrmChinh            Form chính: menu + vùng MDI
+│   ├── GiaoDien.cs         Định dạng lưới, ThucHienAsync (khóa form + bắt BusinessException), hàng đợi CSDL theo form
+│   ├── ThongBao.cs, HopThoai.cs, XuLyLoi.cs (bắt lỗi toàn cục + ghi log)
+│   ├── AnhSach.cs          Chép ảnh bìa vào wwwroot/images/sach của Web
+│   ├── XuatExcel.cs        Xuất danh sách ra .xlsx (ClosedXML)
+│   └── BieuDoCot.cs        Biểu đồ cột tự vẽ bằng GDI+
+└── Forms/                  Các form (mỗi form: .cs xử lý + .Designer.cs giao diện)
 ```
 
-## Các bước thêm một chức năng (ví dụ: Quản lý sách)
+Mỗi form chỉ gọi service của `BookStore.Application`; không viết truy vấn CSDL trong form.
+Service kiểm tra lại quyền (`QuyenHan.KiemTraAsync`) nên dù gọi trực tiếp, chức năng ngoài quyền vẫn bị từ chối (ca ST03).
 
-**1. Viết nghiệp vụ trong `BookStore.Application`** (không viết truy vấn CSDL trong form):
+## Thêm một chức năng mới
 
-```csharp
-// src/BookStore.Application/Services/QuanLySachService.cs
-public interface IQuanLySachService
-{
-    Task<List<Sach>> LayDanhSachAsync(string? tuKhoa);
-    Task ThemAsync(Sach sach);
-}
-public class QuanLySachService : IQuanLySachService
-{
-    private readonly IAppDbContext _db;
-    public QuanLySachService(IAppDbContext db) => _db = db;
-    // ... dùng _db.Sachs, _db.SaveChangesAsync(); lỗi nghiệp vụ thì throw new BusinessException("...")
-}
-```
-
-**2. Tạo form** trong Visual Studio: chuột phải thư mục `Forms` → Add → Form (Windows Forms) → `FrmQuanLySach`.
-Nhận service qua constructor:
-
-```csharp
-public partial class FrmQuanLySach : Form
-{
-    private readonly IQuanLySachService _svc;
-    public FrmQuanLySach(IQuanLySachService svc)
-    {
-        InitializeComponent();
-        _svc = svc;
-    }
-
-    private async void FrmQuanLySach_Load(object sender, EventArgs e)
-    {
-        dgvSach.DataSource = await _svc.LayDanhSachAsync(null);
-    }
-}
-```
-
-**3. Đăng ký trong `Program.cs`:**
-
-```csharp
-builder.Services.AddScoped<IQuanLySachService, QuanLySachService>();
-builder.Services.AddTransient<FrmQuanLySach>();
-```
-
-**4. Gắn vào menu** trong `Forms/FrmChinh.cs`: thay dòng `ChuaHienThuc(...)` của mục menu tương ứng:
-
-```csharp
-private void mnuSach_Click(object sender, EventArgs e) => MoForm<FrmQuanLySach>();
-```
-
-## Quy ước
-
-- Tên form: `Frm` + tên chức năng (FrmQuanLySach, FrmPhieuKho, FrmXuLyDonHang...).
-- Tên control: `txt`, `btn`, `dgv`, `cbo`, `lbl`, `nud`, `dtp` + tên (txtTenSach, btnLuu, dgvSach).
-- Lỗi do người dùng nhập sai / vi phạm nghiệp vụ: `throw new BusinessException("thông báo")` trong service.
-  Lỗi này được hiện thành hộp thoại cảnh báo; lỗi khác được ghi log tự động.
-- Thao tác nhiều bảng (phiếu kho, chuyển trạng thái đơn + hoàn kho): dùng `_db.ThucThiTrongGiaoTacAsync(...)`,
-  xem mẫu trong `DonHangService.DatHangAsync` / `HuyDonAsync`.
-- Cần biết ai đang thao tác (ví dụ người lập phiếu kho): nhận `PhienDangNhap` qua constructor, dùng `_phien.MaTaiKhoan`.
-
-## Menu và vai trò hiện tại
-
-| Menu | Mục | Vai trò thấy menu |
-|---|---|---|
-| Quản trị | Tài khoản nhân viên | Quản trị viên |
-| Danh mục | Sách, Danh mục sách, Nhà xuất bản, Tác giả | Quản trị viên, Nhân viên kho |
-| Kho | Lập phiếu kho, Tồn kho | Quản trị viên, Nhân viên kho |
-| Đơn hàng | Xử lý đơn hàng | Quản trị viên, Nhân viên bán hàng |
-| Báo cáo | Doanh thu, Sách bán chạy | Quản trị viên, Nhân viên bán hàng |
-
-Nếu phân quyền trong báo cáo khác bảng này, sửa trong `FrmChinh.PhanQuyenMenu()`.
+1. Viết nghiệp vụ trong `BookStore.Application/Services` (lỗi nghiệp vụ: `throw new BusinessException("...")`),
+   đăng ký trong `BookStore.Application/DependencyInjection.cs`.
+2. Tạo form trong `Forms` (Add → Form (Windows Forms)), nhận service qua constructor.
+3. Đăng ký form trong `Program.cs`: `builder.Services.AddTransient<FrmMoi>();`
+4. Thêm mục menu trong `FrmChinh` (Designer) và gọi `MoForm<FrmMoi>()`; ẩn/hiện theo vai trò trong `PhanQuyenMenu()`.
+5. Viết kiểm thử cho service trong `tests/BookStore.Tests`.
