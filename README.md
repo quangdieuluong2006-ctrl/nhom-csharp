@@ -78,7 +78,8 @@ Log ghi tại `src/BookStore.Web/logs/web-<ngày>.log` (Serilog).
 | Lab07 | Phân trang, tìm kiếm | X.PagedList, lọc theo từ khóa, giá, sắp xếp |
 | – | Theo dõi đơn hàng | `DonHangController` – danh sách, chi tiết, khách tự hủy đơn chờ xác nhận |
 
-Lab08–09 (trang quản trị) được chuyển sang ứng dụng **Desktop WinForms** theo yêu cầu đề tài.
+Lab08–09 (trang quản trị) được hiện thực bằng **ứng dụng Desktop WinForms** theo yêu cầu đề tài
+(phần quản trị: Windows Forms; phần người dùng: Web).
 
 ## Chức năng Desktop (phần mềm quản trị)
 
