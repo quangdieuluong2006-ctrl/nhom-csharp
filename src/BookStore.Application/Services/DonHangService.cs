@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BookStore.Application.Services;
 
-public interface IDonHangService
+public partial interface IDonHangService
 {
     /// <summary>Tạo đơn hàng từ giỏ, trừ tồn kho trong cùng một giao tác. Trả về mã đơn.</summary>
     Task<long> DatHangAsync(int maKhachHang, ThongTinNhanHangDto nhanHang, IReadOnlyList<DongDatHang> gioHang);
@@ -21,7 +21,7 @@ public interface IDonHangService
 /// Nghiệp vụ đơn hàng phía khách (Lab06 + quy trình liên thông Web ↔ Desktop trong báo cáo):
 /// Web tạo đơn "Chờ xác nhận" → Desktop xác nhận/giao/hoàn thành → khách theo dõi trạng thái trên Web.
 /// </summary>
-public class DonHangService : IDonHangService
+public partial class DonHangService : IDonHangService
 {
     private readonly IAppDbContext _db;
     public DonHangService(IAppDbContext db) => _db = db;
@@ -82,14 +82,16 @@ public class DonHangService : IDonHangService
             .Select(d => new DonHangTomTatDto(d.MaDonHang, d.NgayDat, d.TongTien, d.TrangThai, d.ChiTiets.Sum(c => c.SoLuong)))
             .ToListAsync();
 
-    public async Task<DonHangChiTietDto?> LayChiTietAsync(long maDonHang, int maKhachHang) =>
-        await _db.DonHangs.AsNoTracking().Where(d => d.MaDonHang == maDonHang && d.MaKhachHang == maKhachHang)
-            .Select(d => new DonHangChiTietDto(
-                d.MaDonHang, d.NgayDat, d.NgayGiaoDuKien, d.HoTenNhan, d.SoDienThoaiNhan, d.DiaChiGiaoHang, d.GhiChu,
-                d.TongTien, d.TrangThai, d.PhuongThucThanhToan, d.TrangThaiThanhToan,
-                d.ChiTiets.Select(c => new ChiTietDonDto(c.MaSach, c.Sach.TenSach, c.Sach.HinhAnh, c.SoLuong, c.DonGiaDat, c.ThanhTien))
-                    .ToList()))
-            .FirstOrDefaultAsync();
+    public Task<DonHangChiTietDto?> LayChiTietAsync(long maDonHang, int maKhachHang) =>
+        ChonChiTiet(_db.DonHangs.Where(d => d.MaDonHang == maDonHang && d.MaKhachHang == maKhachHang)).FirstOrDefaultAsync();
+
+    /// <summary>Phép chiếu (projection) đơn hàng → DTO chi tiết, dùng chung cho Web và Desktop.</summary>
+    private static IQueryable<DonHangChiTietDto> ChonChiTiet(IQueryable<DonHang> q) =>
+        q.AsNoTracking().Select(d => new DonHangChiTietDto(
+            d.MaDonHang, d.NgayDat, d.NgayGiaoDuKien, d.HoTenNhan, d.SoDienThoaiNhan, d.DiaChiGiaoHang, d.GhiChu,
+            d.TongTien, d.TrangThai, d.PhuongThucThanhToan, d.TrangThaiThanhToan,
+            d.ChiTiets.Select(c => new ChiTietDonDto(c.MaSach, c.Sach.TenSach, c.Sach.HinhAnh, c.SoLuong, c.DonGiaDat, c.ThanhTien))
+                .ToList()));
 
     public async Task HuyDonAsync(long maDonHang, int maKhachHang)
     {
@@ -102,13 +104,21 @@ public class DonHangService : IDonHangService
             if (soDong == 0)
                 throw new BusinessException("Đơn hàng không tồn tại hoặc đã được cửa hàng xử lý nên không thể hủy.");
 
-            // Hoàn lại tồn kho cho từng dòng của đơn
-            var chiTiets = await _db.ChiTietDonHangs.Where(c => c.MaDonHang == maDonHang)
-                .Select(c => new { c.MaSach, c.SoLuong }).ToListAsync(ct);
-            foreach (var c in chiTiets)
-                await _db.Sachs.Where(s => s.MaSach == c.MaSach)
-                    .ExecuteUpdateAsync(u => u.SetProperty(s => s.SoLuongTon, s => s.SoLuongTon + c.SoLuong), ct);
+            await HoanKhoAsync(maDonHang, ct);
             return true;
         });
+    }
+
+    /// <summary>
+    /// Hoàn lại tồn kho cho từng dòng của đơn bị hủy. Chỉ được gọi SAU KHI lệnh đổi trạng thái có điều kiện
+    /// thành công (1 dòng), nên một đơn không bao giờ bị hoàn kho hai lần (BR07).
+    /// </summary>
+    private async Task HoanKhoAsync(long maDonHang, CancellationToken ct)
+    {
+        var chiTiets = await _db.ChiTietDonHangs.Where(c => c.MaDonHang == maDonHang)
+            .Select(c => new { c.MaSach, c.SoLuong }).ToListAsync(ct);
+        foreach (var c in chiTiets)
+            await _db.Sachs.Where(s => s.MaSach == c.MaSach)
+                .ExecuteUpdateAsync(u => u.SetProperty(s => s.SoLuongTon, s => s.SoLuongTon + c.SoLuong), ct);
     }
 }

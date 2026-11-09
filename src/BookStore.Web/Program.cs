@@ -1,5 +1,5 @@
 using System.Globalization;
-using BookStore.Application.Services;
+using BookStore.Application;
 using BookStore.Infrastructure;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Localization;
@@ -19,10 +19,7 @@ builder.Host.UseSerilog((ctx, cfg) => cfg
 // Tầng hạ tầng (EF Core + SQL Server) và tầng nghiệp vụ
 builder.Services.AddInfrastructure(builder.Configuration.GetConnectionString("BookStoreDB")
     ?? throw new InvalidOperationException("Thiếu chuỗi kết nối 'BookStoreDB' trong appsettings.json"));
-builder.Services.AddScoped<ISachService, SachService>();
-builder.Services.AddScoped<IDanhMucService, DanhMucService>();
-builder.Services.AddScoped<ITaiKhoanService, TaiKhoanService>();
-builder.Services.AddScoped<IDonHangService, DonHangService>();
+builder.Services.AddApplication();
 
 // Giỏ hàng lưu trong Session (Lab05); cookie session chỉ đọc được từ server (HttpOnly)
 builder.Services.AddDistributedMemoryCache();

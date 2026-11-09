@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BookStore.Application.Services;
 
-public interface ITaiKhoanService
+public partial interface ITaiKhoanService
 {
     Task<NguoiDungDto> DangKyAsync(DangKyDto dto);
     /// <summary>Trả về null nếu sai tên đăng nhập/mật khẩu hoặc tài khoản bị khóa.</summary>
@@ -21,7 +21,7 @@ public interface ITaiKhoanService
 /// Quy ước dữ liệu (báo cáo mục 3.7): thông tin liên hệ của khách hàng chỉ đọc/ghi ở KHACHHANG;
 /// Email, SoDienThoai của TAIKHOAN chỉ dùng cho tài khoản nhân viên. TAIKHOAN.HoTen là tên hiển thị.
 /// </summary>
-public class TaiKhoanService : ITaiKhoanService
+public partial class TaiKhoanService : ITaiKhoanService
 {
     private readonly IAppDbContext _db;
     public TaiKhoanService(IAppDbContext db) => _db = db;
