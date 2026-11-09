@@ -49,6 +49,13 @@ Yêu cầu: **.NET 8 SDK**, **SQL Server** (Express/Developer/LocalDB), Visual S
 Chuỗi kết nối giống Web (LocalDB hoặc `appsettings.Local.json`), chọn `BookStore.Desktop` làm
 Startup Project rồi F5. Đăng nhập bằng `admin` / `123456`. Hướng dẫn thêm chức năng: [docs/HUONG_DAN_DESKTOP.md](docs/HUONG_DAN_DESKTOP.md).
 
+### Dùng VS Code thay cho Visual Studio
+
+Mở **thư mục** `nhom-csharp` bằng VS Code (File → Open Folder), cài các tiện ích được gợi ý (C# Dev Kit, SQL Server).
+Vào **Run and Debug** (Ctrl+Shift+D), chọn `Web (khách hàng)`, `Desktop (quản trị)` hoặc `Web + Desktop` rồi bấm **F5**.
+Muốn web tự tải lại khi sửa code: Terminal → Run Task → `web: chạy và tự tải lại khi sửa code (dotnet watch)`.
+Giao diện kéo-thả (Designer) của WinForms chỉ có trong Visual Studio.
+
 Khi thay đổi thực thể, tạo migration mới:
 
 ```bash

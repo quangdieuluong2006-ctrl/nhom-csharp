@@ -1,0 +1,8 @@
+{
+  // VS Code sẽ gợi ý cài các tiện ích này khi mở thư mục dự án
+  "recommendations": [
+    "ms-dotnettools.csdevkit",
+    "ms-dotnettools.csharp",
+    "ms-mssql.mssql"
+  ]
+}

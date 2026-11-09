@@ -1,0 +1,41 @@
+{
+  // Chọn cấu hình ở thanh Run and Debug (Ctrl+Shift+D) rồi bấm F5
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Web (khách hàng)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/BookStore.Web/bin/Debug/net8.0/BookStore.Web.dll",
+      "cwd": "${workspaceFolder}/src/BookStore.Web",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5237"
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      },
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Desktop (quản trị)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/BookStore.Desktop/bin/Debug/net8.0-windows/BookStore.Desktop.dll",
+      "cwd": "${workspaceFolder}/src/BookStore.Desktop/bin/Debug/net8.0-windows",
+      "console": "internalConsole",
+      "stopAtEntry": false
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Web + Desktop (demo quy trình liên thông)",
+      "configurations": ["Web (khách hàng)", "Desktop (quản trị)"],
+      "stopAll": true
+    }
+  ]
+}
