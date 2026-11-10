@@ -26,6 +26,10 @@ public class ThongTinNhanHangDto
     [StringLength(500)]
     [Display(Name = "Ghi chú")]
     public string? GhiChu { get; set; }
+
+    [Required(ErrorMessage = "Vui lòng chọn phương thức thanh toán")]
+    [Display(Name = "Phương thức thanh toán")]
+    public string PhuongThucThanhToan { get; set; } = PhuongThuc.COD;
 }
 
 public record DonHangTomTatDto(long MaDonHang, DateTime NgayDat, decimal TongTien, TrangThaiDonHang TrangThai, int SoSanPham);
@@ -37,6 +41,11 @@ public record DonHangChiTietDto(
     string DiaChiGiaoHang, string? GhiChu, decimal TongTien, TrangThaiDonHang TrangThai,
     string PhuongThucThanhToan, TrangThaiThanhToan TrangThaiThanhToan, IReadOnlyList<ChiTietDonDto> ChiTiets)
 {
-    /// <summary>Khách chỉ được tự hủy khi đơn còn chờ xác nhận (quy tắc nghiệp vụ trong báo cáo).</summary>
-    public bool CoTheHuy => TrangThai == TrangThaiDonHang.ChoXacNhan;
+    /// <summary>Khách chỉ được tự hủy khi đơn còn chờ xác nhận và chưa trả tiền (đã trả tiền thì liên hệ cửa hàng để hoàn tiền).</summary>
+    public bool CoTheHuy => TrangThai == TrangThaiDonHang.ChoXacNhan && TrangThaiThanhToan == TrangThaiThanhToan.ChuaThanhToan;
+
+    /// <summary>Đơn trả trước (chuyển khoản/MoMo) chưa thanh toán và chưa hủy: hiện mã QR để khách thanh toán.</summary>
+    public bool CanThanhToanQr => PhuongThuc.LaTraTruoc(PhuongThucThanhToan)
+                                  && TrangThaiThanhToan == TrangThaiThanhToan.ChuaThanhToan
+                                  && TrangThai != TrangThaiDonHang.DaHuy;
 }

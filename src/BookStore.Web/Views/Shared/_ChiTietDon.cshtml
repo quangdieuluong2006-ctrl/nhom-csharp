@@ -12,7 +12,10 @@
             <div><span class="text-muted">Dự kiến giao:</span> @ngay.ToString("dd/MM/yyyy")</div>
         }
         <div><span class="text-muted">Trạng thái:</span> <span class="badge bg-@mau">@ten</span></div>
-        <div><span class="text-muted">Thanh toán:</span> @Model.PhuongThucThanhToan – @HienThi.ThanhToan(Model.TrangThaiThanhToan)</div>
+        <div>
+            <span class="text-muted">Thanh toán:</span> @PhuongThuc.Ten(Model.PhuongThucThanhToan) –
+            <span class="badge bg-@(Model.TrangThaiThanhToan == TrangThaiThanhToan.DaThanhToan ? "success" : "secondary")">@HienThi.ThanhToan(Model.TrangThaiThanhToan)</span>
+        </div>
     </div>
     <div class="col-md-6">
         <div><span class="text-muted">Người nhận:</span> @Model.HoTenNhan – @Model.SoDienThoaiNhan</div>

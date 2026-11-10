@@ -97,6 +97,7 @@ public partial class FrmDonHang : Form
             dgvChiTiet.DataSource = null;
             lblTongTien.Text = "";
             btnChuyenTiep.Enabled = btnHuyDon.Enabled = false;
+            btnXacNhanTien.Visible = false;
             return;
         }
 
@@ -107,7 +108,9 @@ public partial class FrmDonHang : Form
         sb.AppendLine($"Địa chỉ: {d.DiaChiGiaoHang}");
         if (d.NgayGiaoDuKien is DateTime ngay) sb.AppendLine($"Dự kiến giao: {ngay:dd/MM/yyyy}");
         if (!string.IsNullOrWhiteSpace(d.GhiChu)) sb.AppendLine($"Ghi chú: {d.GhiChu}");
-        sb.AppendLine($"Thanh toán: {d.PhuongThucThanhToan} – {d.TrangThaiThanhToan.Ten()}");
+        sb.AppendLine($"Thanh toán: {PhuongThuc.Ten(d.PhuongThucThanhToan)} – {d.TrangThaiThanhToan.Ten()}");
+        if (d.CanThanhToanQr)
+            sb.AppendLine($"→ Kiểm tra tài khoản: {d.TongTien:N0} đ, nội dung “{PhuongThuc.NoiDungChuyenKhoan(d.MaDonHang)}”");
         sb.Append($"TRẠNG THÁI: {d.TrangThai.Ten().ToUpper()}");
         txtThongTinDon.Text = sb.ToString();
 
@@ -129,6 +132,8 @@ public partial class FrmDonHang : Form
             _ => "Đơn đã kết thúc"
         };
         btnHuyDon.Enabled = DonHang.LaChuyenHopLe(d.TrangThai, TrangThaiDonHang.DaHuy);
+        // Đơn chuyển khoản/MoMo chưa nhận tiền: hiện nút xác nhận; chưa xác nhận thì chưa được giao hàng
+        btnXacNhanTien.Visible = d.CanThanhToanQr;
     }
 
     private async void dgvDanhSach_SelectionChanged(object sender, EventArgs e)
@@ -167,9 +172,26 @@ public partial class FrmDonHang : Form
         });
     }
 
+    private async void btnXacNhanTien_Click(object sender, EventArgs e)
+    {
+        if (_donDangXem is not { } d) return;
+        if (!ThongBao.XacNhan($"Đã nhận {d.TongTien:N0} đ qua {PhuongThuc.TenNgan(d.PhuongThucThanhToan)} " +
+                              $"với nội dung “{PhuongThuc.NoiDungChuyenKhoan(d.MaDonHang)}”?")) return;
+        await GiaoDien.ThucHienAsync(this, async () =>
+        {
+            await _svc.XacNhanDaThanhToanAsync(d.MaDonHang, _phien.MaTaiKhoan);
+            _log.LogInformation("{NhanVien} xác nhận đơn {MaDon} đã thanh toán qua {PhuongThuc}",
+                _phien.NguoiDung!.TenDangNhap, d.MaDonHang, d.PhuongThucThanhToan);
+            await TaiDanhSachAsync(d.MaDonHang);
+        });
+    }
+
     private async void btnHuyDon_Click(object sender, EventArgs e)
     {
         if (_donDangXem is not { } d) return;
+        if (d.TrangThaiThanhToan == TrangThaiThanhToan.DaThanhToan &&
+            !ThongBao.XacNhan($"Đơn #{d.MaDonHang} khách ĐÃ THANH TOÁN {d.TongTien:N0} đ.\nHủy đơn thì cửa hàng phải hoàn tiền cho khách. Tiếp tục?"))
+            return;
         var lyDo = HopThoai.NhapChuoi(this, $"Hủy đơn #{d.MaDonHang}",
             "Lý do hủy (ví dụ: khách không nhận hàng). Tồn kho sẽ được hoàn lại.", doDaiToiDa: 200);
         if (lyDo is null) return;

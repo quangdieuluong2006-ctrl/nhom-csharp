@@ -488,3 +488,7 @@ logs/
 
 # Cấu hình riêng từng máy (chuỗi kết nối)
 appsettings.Local.json
+
+# Ảnh QR nhận tiền thật (chứa số tài khoản) – chỉ để trên máy, không đưa lên GitHub; giữ lại ảnh mẫu
+src/BookStore.Web/wwwroot/images/thanhtoan/*
+!src/BookStore.Web/wwwroot/images/thanhtoan/qr-mau.svg

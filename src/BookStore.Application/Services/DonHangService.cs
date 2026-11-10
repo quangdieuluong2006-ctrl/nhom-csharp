@@ -33,6 +33,8 @@ public partial class DonHangService : IDonHangService
             .Select(g => new DongDatHang(g.Key, g.Sum(x => x.SoLuong))).ToList();
         if (dong.Count == 0) throw new BusinessException("Giỏ hàng đang trống.");
         if (dong.Any(d => d.SoLuong <= 0)) throw new BusinessException("Số lượng sách không hợp lệ.");
+        if (!PhuongThuc.HopLe(nhanHang.PhuongThucThanhToan))
+            throw new BusinessException("Phương thức thanh toán không hợp lệ.");
 
         return await _db.ThucThiTrongGiaoTacAsync(async ct =>
         {
@@ -50,7 +52,8 @@ public partial class DonHangService : IDonHangService
                 HoTenNhan = nhanHang.HoTenNhan.Trim(),
                 SoDienThoaiNhan = nhanHang.SoDienThoaiNhan.Trim(),
                 DiaChiGiaoHang = nhanHang.DiaChiGiaoHang.Trim(),
-                GhiChu = string.IsNullOrWhiteSpace(nhanHang.GhiChu) ? null : nhanHang.GhiChu.Trim()
+                GhiChu = string.IsNullOrWhiteSpace(nhanHang.GhiChu) ? null : nhanHang.GhiChu.Trim(),
+                PhuongThucThanhToan = nhanHang.PhuongThucThanhToan
             };
 
             foreach (var d in dong)
@@ -99,10 +102,12 @@ public partial class DonHangService : IDonHangService
         {
             // Đổi trạng thái có điều kiện: nếu nhân viên vừa xác nhận đơn trên Desktop thì lệnh này cập nhật 0 dòng.
             int soDong = await _db.DonHangs
-                .Where(d => d.MaDonHang == maDonHang && d.MaKhachHang == maKhachHang && d.TrangThai == TrangThaiDonHang.ChoXacNhan)
+                .Where(d => d.MaDonHang == maDonHang && d.MaKhachHang == maKhachHang && d.TrangThai == TrangThaiDonHang.ChoXacNhan
+                            && d.TrangThaiThanhToan == TrangThaiThanhToan.ChuaThanhToan)
                 .ExecuteUpdateAsync(u => u.SetProperty(d => d.TrangThai, TrangThaiDonHang.DaHuy), ct);
             if (soDong == 0)
-                throw new BusinessException("Đơn hàng không tồn tại hoặc đã được cửa hàng xử lý nên không thể hủy.");
+                throw new BusinessException("Đơn hàng đã được cửa hàng xử lý hoặc đã thanh toán nên không thể tự hủy. " +
+                                            "Vui lòng liên hệ cửa hàng để được hỗ trợ.");
 
             await HoanKhoAsync(maDonHang, ct);
             return true;

@@ -43,6 +43,7 @@ partial class FrmDonHang
         txtThongTinDon = new TextBox();
         flowNut = new FlowLayoutPanel();
         btnChuyenTiep = new Button();
+        btnXacNhanTien = new Button();
         btnHuyDon = new Button();
         lblTongTien = new Label();
         dgvChiTiet = new DataGridView();
@@ -236,6 +237,7 @@ partial class FrmDonHang
         // flowNut
         //
         flowNut.Controls.Add(btnChuyenTiep);
+        flowNut.Controls.Add(btnXacNhanTien);
         flowNut.Controls.Add(btnHuyDon);
         flowNut.AutoSize = true;
         flowNut.Dock = DockStyle.Bottom;
@@ -255,13 +257,22 @@ partial class FrmDonHang
         btnChuyenTiep.TabIndex = 18;
         btnChuyenTiep.Click += btnChuyenTiep_Click;
         //
+        // btnXacNhanTien
+        //
+        btnXacNhanTien.Size = new Size(200, 36);
+        btnXacNhanTien.Text = "Xác nhận đã nhận tiền";
+        btnXacNhanTien.UseVisualStyleBackColor = true;
+        btnXacNhanTien.Name = "btnXacNhanTien";
+        btnXacNhanTien.TabIndex = 19;
+        btnXacNhanTien.Click += btnXacNhanTien_Click;
+        //
         // btnHuyDon
         //
         btnHuyDon.Size = new Size(120, 36);
         btnHuyDon.Text = "Hủy đơn";
         btnHuyDon.UseVisualStyleBackColor = true;
         btnHuyDon.Name = "btnHuyDon";
-        btnHuyDon.TabIndex = 19;
+        btnHuyDon.TabIndex = 20;
         btnHuyDon.Click += btnHuyDon_Click;
         //
         // lblTongTien
@@ -273,13 +284,13 @@ partial class FrmDonHang
         lblTongTien.Text = "";
         lblTongTien.TextAlign = ContentAlignment.MiddleRight;
         lblTongTien.Name = "lblTongTien";
-        lblTongTien.TabIndex = 20;
+        lblTongTien.TabIndex = 21;
         //
         // dgvChiTiet
         //
         dgvChiTiet.Dock = DockStyle.Fill;
         dgvChiTiet.Name = "dgvChiTiet";
-        dgvChiTiet.TabIndex = 21;
+        dgvChiTiet.TabIndex = 22;
         //
         // pnlDuoi
         //
@@ -289,20 +300,20 @@ partial class FrmDonHang
         pnlDuoi.Padding = new Padding(12, 0, 12, 0);
         pnlDuoi.Size = new Size(1100, 30);
         pnlDuoi.Name = "pnlDuoi";
-        pnlDuoi.TabIndex = 22;
+        pnlDuoi.TabIndex = 23;
         //
         // lblTongSo
         //
         lblTongSo.Dock = DockStyle.Fill;
         lblTongSo.TextAlign = ContentAlignment.MiddleLeft;
         lblTongSo.Name = "lblTongSo";
-        lblTongSo.TabIndex = 23;
+        lblTongSo.TabIndex = 24;
         //
         // dgvDanhSach
         //
         dgvDanhSach.Dock = DockStyle.Fill;
         dgvDanhSach.Name = "dgvDanhSach";
-        dgvDanhSach.TabIndex = 24;
+        dgvDanhSach.TabIndex = 25;
         dgvDanhSach.SelectionChanged += dgvDanhSach_SelectionChanged;
         dgvDanhSach.CellFormatting += dgvDanhSach_CellFormatting;
         //
@@ -366,6 +377,7 @@ partial class FrmDonHang
     private TextBox txtThongTinDon;
     private FlowLayoutPanel flowNut;
     private Button btnChuyenTiep;
+    private Button btnXacNhanTien;
     private Button btnHuyDon;
     private Label lblTongTien;
     private DataGridView dgvChiTiet;

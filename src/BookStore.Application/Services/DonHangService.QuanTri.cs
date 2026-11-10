@@ -19,6 +19,8 @@ public partial interface IDonHangService
     Task ChuyenTrangThaiAsync(long maDonHang, TrangThaiDonHang trangThaiMoi, int maNhanVien);
     /// <summary>Nhân viên hủy đơn Chờ xác nhận / Đã xác nhận / Đang giao (giao thất bại) và hoàn kho (BR13).</summary>
     Task HuyDonBoiNhanVienAsync(long maDonHang, int maNhanVien, string? lyDo);
+    /// <summary>Đơn chuyển khoản/MoMo: nhân viên đã thấy tiền vào tài khoản thì xác nhận "Đã thanh toán".</summary>
+    Task XacNhanDaThanhToanAsync(long maDonHang, int maNhanVien);
 }
 
 public partial class DonHangService
@@ -44,7 +46,7 @@ public partial class DonHangService
         {
             MaDonHang = d.MaDonHang, NgayDat = d.NgayDat, KhachHang = d.KhachHang.HoTen,
             HoTenNhan = d.HoTenNhan, SoDienThoaiNhan = d.SoDienThoaiNhan, TongTien = d.TongTien,
-            TrangThai = d.TrangThai, TrangThaiThanhToan = d.TrangThaiThanhToan
+            TrangThai = d.TrangThai, TrangThaiThanhToan = d.TrangThaiThanhToan, PhuongThucThanhToan = d.PhuongThucThanhToan
         }).Take(500).ToListAsync();
     }
 
@@ -60,11 +62,17 @@ public partial class DonHangService
         if (trangThaiMoi == TrangThaiDonHang.DaHuy)
             throw new BusinessException("Hủy đơn hàng dùng chức năng Hủy đơn (có hoàn kho).");
 
-        var cu = await _db.DonHangs.Where(d => d.MaDonHang == maDonHang)
-                     .Select(d => (TrangThaiDonHang?)d.TrangThai).FirstOrDefaultAsync()
-                 ?? throw new BusinessException("Đơn hàng không tồn tại.");
+        var don = await _db.DonHangs.AsNoTracking().Where(d => d.MaDonHang == maDonHang)
+                      .Select(d => new { d.TrangThai, d.PhuongThucThanhToan, d.TrangThaiThanhToan }).FirstOrDefaultAsync()
+                  ?? throw new BusinessException("Đơn hàng không tồn tại.");
+        var cu = don.TrangThai;
         if (!DonHang.LaChuyenHopLe(cu, trangThaiMoi))
             throw new BusinessException($"Không thể chuyển đơn từ “{cu.Ten()}” sang “{trangThaiMoi.Ten()}”.");
+        // Đơn trả trước (chuyển khoản, MoMo) phải nhận được tiền rồi mới giao hàng
+        if (trangThaiMoi == TrangThaiDonHang.DangGiao && PhuongThuc.LaTraTruoc(don.PhuongThucThanhToan)
+            && don.TrangThaiThanhToan == TrangThaiThanhToan.ChuaThanhToan)
+            throw new BusinessException($"Đơn thanh toán bằng {PhuongThuc.TenNgan(don.PhuongThucThanhToan)} chưa nhận được tiền. " +
+                                        "Hãy kiểm tra tài khoản và bấm “Xác nhận đã nhận tiền” trước khi giao hàng.");
 
         // UPDATE có điều kiện "WHERE TrangThai = trạng thái vừa đọc": nếu trong lúc đó khách đã hủy đơn trên Web
         // (hoặc nhân viên khác đã xử lý) thì cập nhật 0 dòng ⇒ báo cho nhân viên tải lại, không ghi đè.
@@ -94,9 +102,13 @@ public partial class DonHangService
             if (soDong == 0)
                 throw new BusinessException("Đơn hàng vừa được thay đổi bởi người khác. Vui lòng tải lại danh sách.");
 
-            if (!string.IsNullOrWhiteSpace(lyDo))
+            // Đơn đã trả trước bị hủy: ghi chú để kế toán hoàn tiền cho khách
+            bool canHoanTien = don.TrangThaiThanhToan == TrangThaiThanhToan.DaThanhToan;
+            if (!string.IsNullOrWhiteSpace(lyDo) || canHoanTien)
             {
-                var ghiChu = $"{(don.GhiChu is null ? "" : don.GhiChu + " | ")}Cửa hàng hủy: {lyDo.Trim()}";
+                var them = (string.IsNullOrWhiteSpace(lyDo) ? "Cửa hàng hủy" : $"Cửa hàng hủy: {lyDo.Trim()}")
+                           + (canHoanTien ? $" – CẦN HOÀN {don.TongTien:N0} đ CHO KHÁCH" : "");
+                var ghiChu = $"{(don.GhiChu is null ? "" : don.GhiChu + " | ")}{them}";
                 don.GhiChu = ghiChu.Length <= 500 ? ghiChu : ghiChu[..500];
                 await _db.SaveChangesAsync(ct);
             }
@@ -104,5 +116,17 @@ public partial class DonHangService
             await HoanKhoAsync(maDonHang, ct);
             return true;
         });
+    }
+
+    public async Task XacNhanDaThanhToanAsync(long maDonHang, int maNhanVien)
+    {
+        await _db.KiemTraAsync(maNhanVien, QuyenHan.BanHang);
+        // Cập nhật có điều kiện: chỉ đơn trả trước, chưa thanh toán, chưa hủy
+        int soDong = await _db.DonHangs
+            .Where(d => d.MaDonHang == maDonHang && d.PhuongThucThanhToan != PhuongThuc.COD
+                        && d.TrangThaiThanhToan == TrangThaiThanhToan.ChuaThanhToan && d.TrangThai != TrangThaiDonHang.DaHuy)
+            .ExecuteUpdateAsync(u => u.SetProperty(d => d.TrangThaiThanhToan, TrangThaiThanhToan.DaThanhToan));
+        if (soDong == 0)
+            throw new BusinessException("Chỉ xác nhận được đơn chuyển khoản/MoMo chưa thanh toán và chưa bị hủy.");
     }
 }

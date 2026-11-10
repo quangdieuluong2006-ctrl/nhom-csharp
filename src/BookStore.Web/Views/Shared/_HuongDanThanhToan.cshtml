@@ -1,0 +1,28 @@
+@* Hướng dẫn thanh toán trả trước (chuyển khoản / MoMo) bằng mã QR của cửa hàng *@
+@model DonHangChiTietDto
+@using Microsoft.Extensions.Options
+@inject IOptions<CauHinhThanhToan> CauHinh
+@{
+    var kenh = CauHinh.Value.Lay(Model.PhuongThucThanhToan);
+}
+@if (Model.CanThanhToanQr && kenh != null)
+{
+    <div class="card border-warning mb-3 pay-qr">
+        <div class="card-body d-flex flex-column flex-md-row gap-4 align-items-center">
+            <img src="@kenh.AnhQR" alt="Mã QR thanh toán @PhuongThuc.Ten(Model.PhuongThucThanhToan)" class="qr-img" />
+            <div>
+                <h2 class="h6 fw-bold mb-2"><i class="bi bi-qr-code-scan"></i> Thanh toán bằng @PhuongThuc.Ten(Model.PhuongThucThanhToan)</h2>
+                <div class="mb-1">Số tiền: <span class="price fs-5">@HienThi.Tien(Model.TongTien)</span></div>
+                <div class="mb-1">Nội dung chuyển khoản: <code class="fs-6">@PhuongThuc.NoiDungChuyenKhoan(Model.MaDonHang)</code></div>
+                @if (!string.IsNullOrWhiteSpace(kenh.ThongTin))
+                {
+                    <div class="small text-muted mb-2">@kenh.ThongTin</div>
+                }
+                <div class="small">
+                    Vui lòng ghi <strong>đúng nội dung</strong> để cửa hàng đối chiếu. Sau khi nhận được tiền, nhân viên xác nhận
+                    và đơn chuyển sang “Đã thanh toán” – bạn theo dõi tại trang <a asp-controller="DonHang" asp-action="ChiTiet" asp-route-id="@Model.MaDonHang">chi tiết đơn</a>.
+                </div>
+            </div>
+        </div>
+    </div>
+}

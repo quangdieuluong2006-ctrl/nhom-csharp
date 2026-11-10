@@ -24,6 +24,8 @@ builder.Host.UseSerilog((ctx, cfg) => cfg
 builder.Services.AddInfrastructure(builder.Configuration.GetConnectionString("BookStoreDB")
     ?? throw new InvalidOperationException("Thiếu chuỗi kết nối 'BookStoreDB' trong appsettings.json"));
 builder.Services.AddApplication();
+builder.Services.Configure<BookStore.Web.Infrastructure.CauHinhThanhToan>(
+    builder.Configuration.GetSection(BookStore.Web.Infrastructure.CauHinhThanhToan.Muc));
 
 // Giỏ hàng lưu trong Session (Lab05); cookie session chỉ đọc được từ server (HttpOnly)
 builder.Services.AddDistributedMemoryCache();

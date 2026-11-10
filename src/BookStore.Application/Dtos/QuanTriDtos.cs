@@ -182,7 +182,8 @@ public class DonHangQtDto
     [Browsable(false)] public TrangThaiDonHang TrangThai { get; init; }
     [DisplayName("Trạng thái")] public string TrangThaiText => TrangThai.Ten();
     [Browsable(false)] public TrangThaiThanhToan TrangThaiThanhToan { get; init; }
-    [DisplayName("Thanh toán")] public string ThanhToanText => TrangThaiThanhToan.Ten();
+    [Browsable(false)] public string PhuongThucThanhToan { get; init; } = PhuongThuc.COD;
+    [DisplayName("Thanh toán")] public string ThanhToanText => $"{PhuongThuc.TenNgan(PhuongThucThanhToan)} – {TrangThaiThanhToan.Ten()}";
 }
 
 // ------------------------------------- Kho -------------------------------------
