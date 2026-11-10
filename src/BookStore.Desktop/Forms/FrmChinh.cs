@@ -41,6 +41,8 @@ public partial class FrmChinh : Form
         lblVaiTro.Text = $"Vai trò: {nd.VaiTro.Ten()}";
         Text = $"BookStore – Phần mềm quản trị – {nd.HoTen}";
         PhanQuyenMenu();
+        ChuDe.KieuMenu(menuStrip, statusStrip);
+        TaoThanhDieuHuong();
         MoTongQuan();
         if (LaBanHang)
         {
@@ -61,6 +63,91 @@ public partial class FrmChinh : Form
         mnuKho.Visible = LaKho;
         mnuBaoCao.Visible = LaBanHang;
         mnuQuanTri.Visible = LaQuanTri;
+    }
+
+    // ------------------------------ Thanh điều hướng bên trái ------------------------------
+
+    private Button? _nutDangChon;
+
+    /// <summary>
+    /// Thanh điều hướng dựng từ chính menu: chỉ có nút cho mục menu mà vai trò hiện tại được thấy,
+    /// nên phân quyền luôn khớp với menu (PhanQuyenMenu) mà không phải viết lặp.
+    /// </summary>
+    private void TaoThanhDieuHuong()
+    {
+        var thanh = new Panel { Dock = DockStyle.Left, Width = 230, BackColor = ChuDe.XanhRatDam, Name = "pnlDieuHuong" };
+        var ds = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = true,
+            Padding = new Padding(10, 6, 10, 10), BackColor = ChuDe.XanhRatDam
+        };
+        var logo = new Label
+        {
+            Dock = DockStyle.Top, Height = 64, Text = "BookStore", ForeColor = ChuDe.Vang,
+            Font = new Font("Segoe UI Semibold", 15F), TextAlign = ContentAlignment.MiddleLeft, Padding = new Padding(16, 0, 0, 0)
+        };
+        var duoi = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Bottom, FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoSize = true,
+            Padding = new Padding(10, 6, 10, 10), BackColor = ChuDe.XanhRatDam
+        };
+
+        ds.Controls.Add(TaoNut("Tổng quan", mnuTongQuan));
+        foreach (var nhom in new[] { mnuDanhMuc, mnuBanHang, mnuKho, mnuBaoCao, mnuQuanTri })
+        {
+            var cacMuc = nhom.DropDownItems.OfType<ToolStripMenuItem>().Where(m => m.Available).ToList();
+            if (!nhom.Available || cacMuc.Count == 0) continue;
+            ds.Controls.Add(new Label
+            {
+                Text = (nhom.Text ?? "").Replace("&", "").ToUpper(), AutoSize = false, Width = 200, Height = 30,
+                ForeColor = Color.FromArgb(150, 170, 190), Font = new Font("Segoe UI Semibold", 8.25F),
+                TextAlign = ContentAlignment.BottomLeft, Margin = new Padding(6, 10, 0, 2)
+            });
+            foreach (var muc in cacMuc) ds.Controls.Add(TaoNut(muc.Text ?? "", muc));
+        }
+        duoi.Controls.Add(TaoNut("Đổi mật khẩu", mnuDoiMatKhau, chonDuoc: false));
+        duoi.Controls.Add(TaoNut("Đăng xuất", mnuDangXuat, chonDuoc: false));
+
+        thanh.Controls.Add(ds);
+        thanh.Controls.Add(duoi);
+        thanh.Controls.Add(logo);
+        Controls.Add(thanh);
+        // Thứ tự neo: menu trên cùng → thanh trạng thái dưới cùng → thanh điều hướng bên trái → vùng MDI
+        thanh.SendToBack();
+        statusStrip.SendToBack();
+        menuStrip.SendToBack();
+    }
+
+    private Button TaoNut(string chu, ToolStripMenuItem muc, bool chonDuoc = true)
+    {
+        var nut = new Button
+        {
+            Text = chu, Width = 200, Height = 38, FlatStyle = FlatStyle.Flat, TextAlign = ContentAlignment.MiddleLeft,
+            ForeColor = Color.White, BackColor = ChuDe.XanhRatDam, Cursor = Cursors.Hand, Font = new Font("Segoe UI", 10F),
+            Padding = new Padding(12, 0, 0, 0), Margin = new Padding(0, 1, 0, 1), UseVisualStyleBackColor = false
+        };
+        nut.FlatAppearance.BorderSize = 0;
+        nut.FlatAppearance.MouseOverBackColor = ChuDe.XanhNhat;
+        nut.FlatAppearance.MouseDownBackColor = ChuDe.XanhDam;
+        if (muc.ShortcutKeys != Keys.None) nut.Text += $"   ({muc.ShortcutKeys})";
+        nut.Click += (_, _) =>
+        {
+            if (chonDuoc) DanhDauNut(nut);
+            muc.PerformClick();
+        };
+        return nut;
+    }
+
+    private void DanhDauNut(Button nut)
+    {
+        if (_nutDangChon != null)
+        {
+            _nutDangChon.BackColor = ChuDe.XanhRatDam;
+            _nutDangChon.ForeColor = Color.White;
+        }
+        nut.BackColor = ChuDe.XanhDam;
+        nut.ForeColor = ChuDe.Vang;
+        _nutDangChon = nut;
     }
 
     /// <summary>Mở form con trong vùng MDI; nếu form đó đang mở thì chỉ đưa lên trước, không mở trùng.</summary>

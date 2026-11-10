@@ -23,6 +23,7 @@ public class FormFactory : IFormFactory
         {
             var form = scope.ServiceProvider.GetRequiredService<T>();
             form.Disposed += (_, _) => scope.Dispose();
+            ChuDe.ApDung(form);   // giao diện thống nhất cho mọi form (HaTang/ChuDe.cs)
             return form;
         }
         catch
