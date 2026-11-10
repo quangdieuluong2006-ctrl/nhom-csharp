@@ -12,10 +12,16 @@ public partial class FrmKhachHang : Form
     private readonly PhienDangNhap _phien;
     private int _maDangSua;
     private bool _dangNap;
+    private readonly KiemTraNhap _kiemTra;   // báo lỗi ngay tại ô nhập (ErrorProvider)
 
     public FrmKhachHang(IKhachHangService svc, IDonHangService donHang, PhienDangNhap phien)
     {
         InitializeComponent();
+        _kiemTra = new KiemTraNhap(this)
+            .BatBuoc(txtHoTen, "Họ tên", 100)
+            .SoDienThoai(txtSoDienThoai, batBuoc: true)
+            .Email(txtEmail)
+            .ToiDa(txtDiaChi, "Địa chỉ", 255);
         _svc = svc;
         _donHang = donHang;
         _phien = phien;
@@ -38,6 +44,7 @@ public partial class FrmKhachHang : Form
 
     private async Task HienThiDongDangChonAsync()
     {
+        _kiemTra.XoaLoi();
         if (GiaoDien.DongDangChon<KhachHangQtDto>(dgvDanhSach) is not { } k)
         {
             _maDangSua = 0;
@@ -69,6 +76,7 @@ public partial class FrmKhachHang : Form
     private async void btnLuu_Click(object sender, EventArgs e)
     {
         if (_maDangSua == 0) { ThongBao.CanhBao("Hãy chọn khách hàng."); return; }
+        if (!_kiemTra.HopLe()) return;
         await GiaoDien.ThucHienAsync(this, async () =>
         {
             await _svc.CapNhatAsync(_phien.MaTaiKhoan, new KhachHangLuuDto

@@ -7,7 +7,7 @@ và CSDL `BookStoreDB` với website, nên mọi thay đổi ở Desktop đượ
 
 | Mã | Form | Chức năng | Vai trò |
 |---|---|---|---|
-| D01 | `FrmDangNhap` | Đăng nhập, từ chối tài khoản khách/khóa | Mọi nhân viên |
+| D01 | `FrmDangNhap` | Đăng nhập, từ chối tài khoản khách/khóa; sai 5 lần liên tiếp thì tạm khóa 30 giây | Mọi nhân viên |
 | D02 | `FrmChinh`, `FrmTongQuan` | Menu theo vai trò, tổng quan số liệu, báo đơn mới từ website, đổi mật khẩu, đăng xuất | Mọi nhân viên |
 | D03 | `FrmSach` | Tìm/lọc sách; thêm, sửa, ngừng kinh doanh, ảnh bìa, tác giả; xuất Excel | QTV (sửa), NVBH/NVK (xem) |
 | D04 | `FrmDanhMuc`, `FrmNhaXuatBan`, `FrmTacGia` | Thêm/sửa/xóa/tìm; đang dùng thì chỉ ngừng dùng | QTV |
@@ -39,7 +39,8 @@ src/BookStore.Desktop
 │   ├── PhienDangNhap.cs    Người đang đăng nhập, kiểm tra quyền: _phien.CoQuyen(VaiTro.QuanTriVien)
 │   ├── FormFactory.cs      Tạo form qua DI, mỗi form một DbContext riêng
 │   ├── GiaoDien.cs         Định dạng lưới, ThucHienAsync (khóa form + bắt BusinessException), hàng đợi CSDL theo form
-│   ├── ThongBao.cs, HopThoai.cs, XuLyLoi.cs (bắt lỗi toàn cục + ghi log)
+│   ├── ThongBao.cs, HopThoai.cs, XuLyLoi.cs (bắt lỗi toàn cục + ghi log, hiện mã lỗi thay vì chi tiết kỹ thuật)
+│   ├── KiemTraNhap.cs      Báo lỗi ngay tại ô nhập (ErrorProvider), dùng lại quy tắc KiemTra của tầng nghiệp vụ
 │   ├── AnhSach.cs          Chép ảnh bìa vào wwwroot/images/sach của Web
 │   ├── XuatExcel.cs        Xuất danh sách ra .xlsx (ClosedXML)
 │   └── BieuDoCot.cs        Biểu đồ cột tự vẽ bằng GDI+
@@ -54,6 +55,8 @@ Service kiểm tra lại quyền (`QuyenHan.KiemTraAsync`) nên dù gọi trực
 1. Viết nghiệp vụ trong `BookStore.Application/Services` (lỗi nghiệp vụ: `throw new BusinessException("...")`),
    đăng ký trong `BookStore.Application/DependencyInjection.cs`.
 2. Tạo form trong `Forms` (Add → Form (Windows Forms)), nhận service qua constructor.
+   Kiểm tra dữ liệu nhập: tạo `new KiemTraNhap(this).BatBuoc(txtTen, "Tên", 100)...` trong constructor,
+   gọi `if (!_kiemTra.HopLe()) return;` đầu nút Lưu và `_kiemTra.XoaLoi()` khi chọn dòng khác.
 3. Đăng ký form trong `Program.cs`: `builder.Services.AddTransient<FrmMoi>();`
 4. Thêm mục menu trong `FrmChinh` (Designer) và gọi `MoForm<FrmMoi>()`; ẩn/hiện theo vai trò trong `PhanQuyenMenu()`.
 5. Viết kiểm thử cho service trong `tests/BookStore.Tests`.

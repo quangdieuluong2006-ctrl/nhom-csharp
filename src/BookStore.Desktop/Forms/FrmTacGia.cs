@@ -11,10 +11,14 @@ public partial class FrmTacGia : Form
     private readonly PhienDangNhap _phien;
     private int _maDangSua;
     private bool _dangNap;
+    private readonly KiemTraNhap _kiemTra;   // báo lỗi ngay tại ô nhập (ErrorProvider)
 
     public FrmTacGia(IDanhMucService svc, PhienDangNhap phien)
     {
         InitializeComponent();
+        _kiemTra = new KiemTraNhap(this)
+            .BatBuoc(txtTenTacGia, "Tên tác giả", 150)
+            .ToiDa(txtTieuSu, "Tiểu sử", 1000);
         _svc = svc;
         _phien = phien;
         GiaoDien.KieuBang(dgvDanhSach);
@@ -35,6 +39,7 @@ public partial class FrmTacGia : Form
 
     private void HienThiDongDangChon()
     {
+        _kiemTra.XoaLoi();
         if (GiaoDien.DongDangChon<TacGiaQtDto>(dgvDanhSach) is not { } t) { XoaTrang(); return; }
         _maDangSua = t.MaTacGia;
         txtTenTacGia.Text = t.TenTacGia;
@@ -45,6 +50,7 @@ public partial class FrmTacGia : Form
 
     private void XoaTrang()
     {
+        _kiemTra.XoaLoi();
         _maDangSua = 0;
         txtTenTacGia.Clear();
         txtTieuSu.Clear();
@@ -64,15 +70,19 @@ public partial class FrmTacGia : Form
         XoaTrang();
     }
 
-    private async void btnLuu_Click(object sender, EventArgs e) => await GiaoDien.ThucHienAsync(this, async () =>
+    private async void btnLuu_Click(object sender, EventArgs e)
     {
-        int ma = await _svc.LuuTacGiaAsync(_phien.MaTaiKhoan, new TacGiaLuuDto
+        if (!_kiemTra.HopLe()) return;
+        await GiaoDien.ThucHienAsync(this, async () =>
         {
-            MaTacGia = _maDangSua, TenTacGia = txtTenTacGia.Text, TieuSu = txtTieuSu.Text, TrangThai = chkDangDung.Checked
+            int ma = await _svc.LuuTacGiaAsync(_phien.MaTaiKhoan, new TacGiaLuuDto
+            {
+                MaTacGia = _maDangSua, TenTacGia = txtTenTacGia.Text, TieuSu = txtTieuSu.Text, TrangThai = chkDangDung.Checked
+            });
+            ThongBao.ThanhCong(_maDangSua == 0 ? "Đã thêm tác giả." : "Đã cập nhật tác giả.");
+            await TaiDanhSachAsync(ma);
         });
-        ThongBao.ThanhCong(_maDangSua == 0 ? "Đã thêm tác giả." : "Đã cập nhật tác giả.");
-        await TaiDanhSachAsync(ma);
-    });
+    }
 
     private async void btnXoa_Click(object sender, EventArgs e)
     {

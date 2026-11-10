@@ -11,10 +11,16 @@ public partial class FrmNhaXuatBan : Form
     private readonly PhienDangNhap _phien;
     private int _maDangSua;
     private bool _dangNap;
+    private readonly KiemTraNhap _kiemTra;   // báo lỗi ngay tại ô nhập (ErrorProvider)
 
     public FrmNhaXuatBan(IDanhMucService svc, PhienDangNhap phien)
     {
         InitializeComponent();
+        _kiemTra = new KiemTraNhap(this)
+            .BatBuoc(txtTenNhaXuatBan, "Tên nhà xuất bản", 150)
+            .ToiDa(txtDiaChi, "Địa chỉ", 255)
+            .SoDienThoai(txtSoDienThoai, batBuoc: false)
+            .Email(txtEmail);
         _svc = svc;
         _phien = phien;
         GiaoDien.KieuBang(dgvDanhSach);
@@ -35,6 +41,7 @@ public partial class FrmNhaXuatBan : Form
 
     private void HienThiDongDangChon()
     {
+        _kiemTra.XoaLoi();
         if (GiaoDien.DongDangChon<NhaXuatBanQtDto>(dgvDanhSach) is not { } n) { XoaTrang(); return; }
         _maDangSua = n.MaNhaXuatBan;
         txtTenNhaXuatBan.Text = n.TenNhaXuatBan;
@@ -46,6 +53,7 @@ public partial class FrmNhaXuatBan : Form
 
     private void XoaTrang()
     {
+        _kiemTra.XoaLoi();
         _maDangSua = 0;
         txtTenNhaXuatBan.Clear();
         txtDiaChi.Clear();
@@ -66,16 +74,20 @@ public partial class FrmNhaXuatBan : Form
         XoaTrang();
     }
 
-    private async void btnLuu_Click(object sender, EventArgs e) => await GiaoDien.ThucHienAsync(this, async () =>
+    private async void btnLuu_Click(object sender, EventArgs e)
     {
-        int ma = await _svc.LuuNhaXuatBanAsync(_phien.MaTaiKhoan, new NhaXuatBanLuuDto
+        if (!_kiemTra.HopLe()) return;
+        await GiaoDien.ThucHienAsync(this, async () =>
         {
-            MaNhaXuatBan = _maDangSua, TenNhaXuatBan = txtTenNhaXuatBan.Text, DiaChi = txtDiaChi.Text,
-            SoDienThoai = txtSoDienThoai.Text, Email = txtEmail.Text
+            int ma = await _svc.LuuNhaXuatBanAsync(_phien.MaTaiKhoan, new NhaXuatBanLuuDto
+            {
+                MaNhaXuatBan = _maDangSua, TenNhaXuatBan = txtTenNhaXuatBan.Text, DiaChi = txtDiaChi.Text,
+                SoDienThoai = txtSoDienThoai.Text, Email = txtEmail.Text
+            });
+            ThongBao.ThanhCong(_maDangSua == 0 ? "Đã thêm nhà xuất bản." : "Đã cập nhật nhà xuất bản.");
+            await TaiDanhSachAsync(ma);
         });
-        ThongBao.ThanhCong(_maDangSua == 0 ? "Đã thêm nhà xuất bản." : "Đã cập nhật nhà xuất bản.");
-        await TaiDanhSachAsync(ma);
-    });
+    }
 
     private async void btnXoa_Click(object sender, EventArgs e)
     {

@@ -21,6 +21,7 @@ public partial class FrmSach : Form
     private string? _fileAnhMoi;       // file ảnh vừa chọn, chưa lưu
     private bool _dangNap;
     private List<SachQtDto> _ds = new();
+    private readonly KiemTraNhap _kiemTra;
 
     public FrmSach(ISachService sach, IDanhMucService danhMuc, PhienDangNhap phien, AnhSach anh)
     {
@@ -31,6 +32,19 @@ public partial class FrmSach : Form
         _anh = anh;
         _duocSua = phien.CoQuyen(VaiTro.QuanTriVien);
         GiaoDien.KieuBang(dgvDanhSach);
+        _kiemTra = new KiemTraNhap(this)
+            .BatBuoc(txtTenSach, "Tên sách", 200)
+            .QuyTac(txtISBN, () =>
+            {
+                var isbn = txtISBN.Text.Replace("-", "").Replace(" ", "");
+                return isbn.Length == 0 || (isbn.All(char.IsDigit) && isbn.Length is 10 or 13)
+                    ? null : "ISBN phải gồm 10 hoặc 13 chữ số (có thể có dấu -).";
+            })
+            .PhaiChon(cboDanhMuc, "Vui lòng chọn danh mục.")
+            .QuyTac(clbTacGia, () => clbTacGia.CheckedItems.Count == 0 ? "Vui lòng chọn ít nhất một tác giả." : null)
+            .ToiDa(txtMoTa, "Mô tả", 4000);
+        // ItemCheck xảy ra TRƯỚC khi mục được tick, nên đợi xử lý xong rồi mới kiểm tra lại
+        clbTacGia.ItemCheck += (_, _) => BeginInvoke(() => _kiemTra.KiemTraLai(clbTacGia));
         Load += FrmSach_Load;
     }
 
@@ -80,6 +94,7 @@ public partial class FrmSach : Form
         if (GiaoDien.DongDangChon<SachQtDto>(dgvDanhSach) is not { } dong) { XoaTrang(); return; }
         var s = await _sach.LayDeSuaAsync(dong.MaSach);
         if (s is null) { XoaTrang(); return; }
+        _kiemTra.XoaLoi();
         _maDangSua = s.MaSach;
         txtISBN.Text = s.ISBN;
         txtTenSach.Text = s.TenSach;
@@ -109,6 +124,7 @@ public partial class FrmSach : Form
 
     private void XoaTrang()
     {
+        _kiemTra.XoaLoi();
         _maDangSua = 0;
         txtISBN.Clear();
         txtTenSach.Clear();
@@ -146,7 +162,13 @@ public partial class FrmSach : Form
         HienAnh(dlg.FileName, dlg.FileName);
     }
 
-    private async void btnLuu_Click(object sender, EventArgs e) => await GiaoDien.ThucHienAsync(this, async () =>
+    private async void btnLuu_Click(object sender, EventArgs e)
+    {
+        if (!_kiemTra.HopLe()) return;   // báo lỗi ngay tại ô nhập sai, không gọi CSDL
+        await GiaoDien.ThucHienAsync(this, LuuAsync);
+    }
+
+    private async Task LuuAsync()
     {
         var dto = new SachLuuDto
         {
@@ -160,7 +182,7 @@ public partial class FrmSach : Form
         int ma = await _sach.LuuAsync(_phien.MaTaiKhoan, dto);
         ThongBao.ThanhCong(_maDangSua == 0 ? "Đã thêm sách. Hãy lập phiếu nhập kho để có hàng bán." : "Đã cập nhật sách.");
         await TaiDanhSachAsync(ma);
-    });
+    }
 
     private async void btnXoa_Click(object sender, EventArgs e)
     {

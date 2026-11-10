@@ -11,10 +11,14 @@ public partial class FrmDanhMuc : Form
     private readonly PhienDangNhap _phien;
     private int _maDangSua;      // 0 = đang thêm mới
     private bool _dangNap;       // chặn SelectionChanged trong lúc nạp lưới
+    private readonly KiemTraNhap _kiemTra;   // báo lỗi ngay tại ô nhập (ErrorProvider)
 
     public FrmDanhMuc(IDanhMucService svc, PhienDangNhap phien)
     {
         InitializeComponent();
+        _kiemTra = new KiemTraNhap(this)
+            .BatBuoc(txtTenDanhMuc, "Tên danh mục", 100)
+            .ToiDa(txtMoTa, "Mô tả", 500);
         _svc = svc;
         _phien = phien;
         GiaoDien.KieuBang(dgvDanhSach);
@@ -36,6 +40,7 @@ public partial class FrmDanhMuc : Form
 
     private void HienThiDongDangChon()
     {
+        _kiemTra.XoaLoi();
         if (GiaoDien.DongDangChon<DanhMucQtDto>(dgvDanhSach) is not { } d) { XoaTrang(); return; }
         _maDangSua = d.MaDanhMuc;
         txtTenDanhMuc.Text = d.TenDanhMuc;
@@ -47,6 +52,7 @@ public partial class FrmDanhMuc : Form
 
     private void XoaTrang()
     {
+        _kiemTra.XoaLoi();
         _maDangSua = 0;
         txtTenDanhMuc.Clear();
         GiaoDien.ChonTheoMa(cboDanhMucCha, null);
@@ -67,17 +73,21 @@ public partial class FrmDanhMuc : Form
         XoaTrang();
     }
 
-    private async void btnLuu_Click(object sender, EventArgs e) => await GiaoDien.ThucHienAsync(this, async () =>
+    private async void btnLuu_Click(object sender, EventArgs e)
     {
-        var dto = new DanhMucLuuDto
+        if (!_kiemTra.HopLe()) return;
+        await GiaoDien.ThucHienAsync(this, async () =>
         {
-            MaDanhMuc = _maDangSua, TenDanhMuc = txtTenDanhMuc.Text, MaDanhMucCha = GiaoDien.MaDangChon(cboDanhMucCha),
-            MoTa = txtMoTa.Text, TrangThai = chkDangDung.Checked
-        };
-        int ma = await _svc.LuuDanhMucAsync(_phien.MaTaiKhoan, dto);
-        ThongBao.ThanhCong(_maDangSua == 0 ? "Đã thêm danh mục." : "Đã cập nhật danh mục.");
-        await TaiDanhSachAsync(ma);
-    });
+            var dto = new DanhMucLuuDto
+            {
+                MaDanhMuc = _maDangSua, TenDanhMuc = txtTenDanhMuc.Text, MaDanhMucCha = GiaoDien.MaDangChon(cboDanhMucCha),
+                MoTa = txtMoTa.Text, TrangThai = chkDangDung.Checked
+            };
+            int ma = await _svc.LuuDanhMucAsync(_phien.MaTaiKhoan, dto);
+            ThongBao.ThanhCong(_maDangSua == 0 ? "Đã thêm danh mục." : "Đã cập nhật danh mục.");
+            await TaiDanhSachAsync(ma);
+        });
+    }
 
     private async void btnXoa_Click(object sender, EventArgs e)
     {

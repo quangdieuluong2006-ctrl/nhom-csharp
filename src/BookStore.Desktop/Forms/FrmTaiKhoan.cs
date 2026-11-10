@@ -12,12 +12,22 @@ public partial class FrmTaiKhoan : Form
     private readonly PhienDangNhap _phien;
     private TaiKhoanQtDto? _dangSua;   // null = đang tạo mới
     private bool _dangNap;
+    private readonly KiemTraNhap _kiemTra;   // báo lỗi ngay tại ô nhập (ErrorProvider)
 
     private static readonly VaiTro[] VaiTroNhanVien = { VaiTro.QuanTriVien, VaiTro.NhanVienBanHang, VaiTro.NhanVienKho };
 
     public FrmTaiKhoan(ITaiKhoanService svc, PhienDangNhap phien)
     {
         InitializeComponent();
+        _kiemTra = new KiemTraNhap(this)
+            .BatBuoc(txtTenDangNhap, "Tên đăng nhập", 50)
+            .QuyTac(txtTenDangNhap, () => txtTenDangNhap.Text.Trim().Length < 4 || txtTenDangNhap.Text.Trim().Any(char.IsWhiteSpace)
+                ? "Tên đăng nhập tối thiểu 4 ký tự, không chứa khoảng trắng." : null)
+            .BatBuoc(txtHoTen, "Họ tên", 100)
+            .Email(txtEmail)
+            .SoDienThoai(txtSoDienThoai, batBuoc: false)
+            // Mật khẩu chỉ nhập khi tạo tài khoản mới; sửa tài khoản thì dùng nút "Đặt lại mật khẩu"
+            .QuyTac(txtMatKhau, () => _dangSua is null && txtMatKhau.Text.Length < 6 ? "Mật khẩu phải có ít nhất 6 ký tự." : null);
         _svc = svc;
         _phien = phien;
         GiaoDien.KieuBang(dgvDanhSach);
@@ -44,6 +54,7 @@ public partial class FrmTaiKhoan : Form
 
     private void HienThiDongDangChon()
     {
+        _kiemTra.XoaLoi();
         if (GiaoDien.DongDangChon<TaiKhoanQtDto>(dgvDanhSach) is not { } t) { XoaTrang(); return; }
         _dangSua = t;
         bool laKhach = t.VaiTro == VaiTro.KhachHang;
@@ -75,6 +86,7 @@ public partial class FrmTaiKhoan : Form
 
     private void XoaTrang()
     {
+        _kiemTra.XoaLoi();
         _dangSua = null;
         GiaoDien.GanCombo(cboVaiTro, VaiTroNhanVien.Select(v => new MucChonDto((int)v + 1, v.Ten())));
         GiaoDien.ChonTheoMa(cboVaiTro, (int)VaiTro.NhanVienBanHang + 1);
@@ -99,28 +111,32 @@ public partial class FrmTaiKhoan : Form
         XoaTrang();
     }
 
-    private async void btnLuu_Click(object sender, EventArgs e) => await GiaoDien.ThucHienAsync(this, async () =>
+    private async void btnLuu_Click(object sender, EventArgs e)
     {
-        var dto = new TaiKhoanLuuDto
+        if (!_kiemTra.HopLe()) return;
+        await GiaoDien.ThucHienAsync(this, async () =>
         {
-            MaTaiKhoan = _dangSua?.MaTaiKhoan ?? 0, TenDangNhap = txtTenDangNhap.Text, HoTen = txtHoTen.Text,
-            Email = txtEmail.Text, SoDienThoai = txtSoDienThoai.Text,
-            VaiTro = (VaiTro)((GiaoDien.MaDangChon(cboVaiTro) ?? 1) - 1), MatKhau = txtMatKhau.Text
-        };
-        int ma;
-        if (_dangSua is null)
-        {
-            ma = await _svc.TaoTaiKhoanNhanVienAsync(_phien.MaTaiKhoan, dto);
-            ThongBao.ThanhCong($"Đã tạo tài khoản “{dto.TenDangNhap}”.");
-        }
-        else
-        {
-            await _svc.CapNhatTaiKhoanAsync(_phien.MaTaiKhoan, dto);
-            ma = dto.MaTaiKhoan;
-            ThongBao.ThanhCong("Đã cập nhật tài khoản.");
-        }
-        await TaiDanhSachAsync(ma);
-    });
+            var dto = new TaiKhoanLuuDto
+            {
+                MaTaiKhoan = _dangSua?.MaTaiKhoan ?? 0, TenDangNhap = txtTenDangNhap.Text, HoTen = txtHoTen.Text,
+                Email = txtEmail.Text, SoDienThoai = txtSoDienThoai.Text,
+                VaiTro = (VaiTro)((GiaoDien.MaDangChon(cboVaiTro) ?? 1) - 1), MatKhau = txtMatKhau.Text
+            };
+            int ma;
+            if (_dangSua is null)
+            {
+                ma = await _svc.TaoTaiKhoanNhanVienAsync(_phien.MaTaiKhoan, dto);
+                ThongBao.ThanhCong($"Đã tạo tài khoản “{dto.TenDangNhap}”.");
+            }
+            else
+            {
+                await _svc.CapNhatTaiKhoanAsync(_phien.MaTaiKhoan, dto);
+                ma = dto.MaTaiKhoan;
+                ThongBao.ThanhCong("Đã cập nhật tài khoản.");
+            }
+            await TaiDanhSachAsync(ma);
+        });
+    }
 
     private async void btnKhoa_Click(object sender, EventArgs e)
     {
