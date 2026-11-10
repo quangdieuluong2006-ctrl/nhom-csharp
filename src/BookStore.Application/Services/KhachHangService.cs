@@ -7,8 +7,8 @@ namespace BookStore.Application.Services;
 
 public interface IKhachHangService
 {
-    Task<List<KhachHangQtDto>> TimKiemAsync(string? tuKhoa);
-    Task<KhachHangLuuDto?> LayAsync(int maKhachHang);
+    Task<List<KhachHangQtDto>> TimKiemAsync(int maNhanVien, string? tuKhoa);
+    Task<KhachHangLuuDto?> LayAsync(int maNhanVien, int maKhachHang);
     Task CapNhatAsync(int maNhanVien, KhachHangLuuDto dto);
 }
 
@@ -18,8 +18,10 @@ public class KhachHangService : IKhachHangService
     private readonly IAppDbContext _db;
     public KhachHangService(IAppDbContext db) => _db = db;
 
-    public async Task<List<KhachHangQtDto>> TimKiemAsync(string? tuKhoa)
+    public async Task<List<KhachHangQtDto>> TimKiemAsync(int maNhanVien, string? tuKhoa)
     {
+        // Thông tin cá nhân của khách: chỉ quản trị viên, NV bán hàng được xem (Bảng 3.13, dòng 9)
+        await _db.KiemTraAsync(maNhanVien, QuyenHan.BanHang);
         var q = _db.KhachHangs.AsNoTracking();
         if (!string.IsNullOrWhiteSpace(tuKhoa))
         {
@@ -35,12 +37,15 @@ public class KhachHangService : IKhachHangService
         }).ToListAsync();
     }
 
-    public Task<KhachHangLuuDto?> LayAsync(int maKhachHang) =>
-        _db.KhachHangs.AsNoTracking().Where(c => c.MaKhachHang == maKhachHang)
+    public async Task<KhachHangLuuDto?> LayAsync(int maNhanVien, int maKhachHang)
+    {
+        await _db.KiemTraAsync(maNhanVien, QuyenHan.BanHang);
+        return await _db.KhachHangs.AsNoTracking().Where(c => c.MaKhachHang == maKhachHang)
             .Select(c => new KhachHangLuuDto
             {
                 MaKhachHang = c.MaKhachHang, HoTen = c.HoTen, SoDienThoai = c.SoDienThoai, Email = c.Email, DiaChi = c.DiaChi
             }).FirstOrDefaultAsync();
+    }
 
     public async Task CapNhatAsync(int maNhanVien, KhachHangLuuDto dto)
     {

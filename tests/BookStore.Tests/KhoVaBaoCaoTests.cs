@@ -66,9 +66,10 @@ public class KhoVaBaoCaoTests
     public async Task DoanhThu_ChiCongDonHoanThanh()
     {
         var homNay = DateTime.Today;
+        int admin = await _csdl.MaTaiKhoanAsync("admin");
         decimal truoc;
         await using (var db = _csdl.TaoDb())
-            truoc = (await new BaoCaoService(db).DoanhThuAsync(homNay, homNay)).Single().DoanhThu;
+            truoc = (await new BaoCaoService(db).DoanhThuAsync(homNay, homNay, admin)).Single().DoanhThu;
 
         int maSach = await _csdl.TaoSachAsync(10, gia: 100_000m);
         int kh = await _csdl.MaKhachHangAsync("khachhang2");
@@ -89,8 +90,8 @@ public class KhoVaBaoCaoTests
         await using (var db = _csdl.TaoDb())
         {
             var bc = new BaoCaoService(db);
-            Assert.Equal(truoc + 200_000m, (await bc.DoanhThuAsync(homNay, homNay)).Single().DoanhThu);
-            var banChay = await bc.SachBanChayAsync(homNay, homNay, 100);
+            Assert.Equal(truoc + 200_000m, (await bc.DoanhThuAsync(homNay, homNay, admin)).Single().DoanhThu);
+            var banChay = await bc.SachBanChayAsync(homNay, homNay, admin, 100);
             Assert.Equal(2, banChay.Single(x => x.MaSach == maSach).SoLuongBan);
         }
     }
@@ -99,7 +100,7 @@ public class KhoVaBaoCaoTests
     public async Task DoanhThu_DuNgayKeCaNgayKhongCoDon()
     {
         await using var db = _csdl.TaoDb();
-        var kq = await new BaoCaoService(db).DoanhThuAsync(DateTime.Today.AddDays(-6), DateTime.Today);
+        var kq = await new BaoCaoService(db).DoanhThuAsync(DateTime.Today.AddDays(-6), DateTime.Today, await _csdl.MaTaiKhoanAsync("nvbanhang"));
         Assert.Equal(7, kq.Count);
     }
 
@@ -111,5 +112,20 @@ public class KhoVaBaoCaoTests
         var ds = await new KhoService(db).LayTonKhoAsync(null, chiSapHet: true);
         Assert.Contains(ds, x => x.MaSach == it && x.TinhTrang == "Sắp hết");
         Assert.DoesNotContain(ds, x => x.MaSach == nhieu);
+    }
+
+    [Fact] // ST03 – thao tác đọc dữ liệu nhạy cảm cũng kiểm tra quyền ở service
+    public async Task NhanVienKho_KhongXemDuocDoanhThu_NhanVienBanHang_KhongXemDuocLichSuKho()
+    {
+        int kho = await _csdl.MaTaiKhoanAsync("nvkho"), banHang = await _csdl.MaTaiKhoanAsync("nvbanhang");
+        await using var db = _csdl.TaoDb();
+        await Assert.ThrowsAsync<BusinessException>(async () => await new BaoCaoService(db).DoanhThuAsync(DateTime.Today, DateTime.Today, kho));
+        await Assert.ThrowsAsync<BusinessException>(async () => await new KhoService(db).LayLichSuPhieuAsync(null, null, null, banHang));
+        await Assert.ThrowsAsync<BusinessException>(async () => await new KhachHangService(db).TimKiemAsync(kho, null));
+
+        // Tổng quan: NV kho xem được số liệu kho nhưng không thấy doanh thu
+        var tq = await new BaoCaoService(db).TongQuanAsync(kho);
+        Assert.Equal(0m, tq.DoanhThuThangNay);
+        Assert.True(tq.TongDauSach > 0);
     }
 }

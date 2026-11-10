@@ -14,6 +14,8 @@ public partial interface ITaiKhoanService
     Task<HoSoKhachHangDto?> LayHoSoAsync(int maTaiKhoan);
     Task CapNhatHoSoAsync(int maTaiKhoan, HoSoKhachHangDto dto);
     Task DoiMatKhauAsync(int maTaiKhoan, string matKhauCu, string matKhauMoi);
+    /// <summary>Tài khoản còn tồn tại, chưa bị khóa và đúng vai trò – dùng để kiểm tra lại phiên đăng nhập Web.</summary>
+    Task<bool> ConHieuLucAsync(int maTaiKhoan, VaiTro vaiTro);
 }
 
 /// <summary>
@@ -89,6 +91,9 @@ public partial class TaiKhoanService : ITaiKhoanService
         // Đơn hàng cũ KHÔNG đổi: người nhận/địa chỉ trên DONHANG là dữ liệu "chốt" tại thời điểm đặt.
         await _db.SaveChangesAsync();
     }
+
+    public Task<bool> ConHieuLucAsync(int maTaiKhoan, VaiTro vaiTro) =>
+        _db.TaiKhoans.AnyAsync(t => t.MaTaiKhoan == maTaiKhoan && t.TrangThai && t.VaiTro == vaiTro);
 
     public async Task DoiMatKhauAsync(int maTaiKhoan, string matKhauCu, string matKhauMoi)
     {

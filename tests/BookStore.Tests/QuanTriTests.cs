@@ -148,11 +148,11 @@ public class QuanTriTests
         int kh = await _csdl.MaKhachHangAsync("khachhang2");
         await using var db = _csdl.TaoDb();
         var svc = new KhachHangService(db);
-        var dto = (await svc.LayAsync(kh))!;
+        var dto = (await svc.LayAsync(nv, kh))!;
         dto.SoDienThoai = "12345";
         await Assert.ThrowsAsync<BusinessException>(async () => await svc.CapNhatAsync(nv, dto));
         dto.SoDienThoai = "0988777666";
         await svc.CapNhatAsync(nv, dto);
-        Assert.Contains(await svc.TimKiemAsync("0988777666"), x => x.MaKhachHang == kh);
+        Assert.Contains(await svc.TimKiemAsync(nv, "0988777666"), x => x.MaKhachHang == kh);
     }
 }

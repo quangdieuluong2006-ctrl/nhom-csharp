@@ -13,8 +13,8 @@ namespace BookStore.Application.Services;
 /// </summary>
 public partial interface IDonHangService
 {
-    Task<List<DonHangQtDto>> TimKiemQuanTriAsync(LocDonHang loc);
-    Task<DonHangChiTietDto?> LayChiTietQuanTriAsync(long maDonHang);
+    Task<List<DonHangQtDto>> TimKiemQuanTriAsync(LocDonHang loc, int maNhanVien);
+    Task<DonHangChiTietDto?> LayChiTietQuanTriAsync(long maDonHang, int maNhanVien);
     /// <summary>Chuyển đơn sang bước kế tiếp theo sơ đồ trạng thái (Bảng 4.6). Hoàn thành ⇒ đã thanh toán (COD).</summary>
     Task ChuyenTrangThaiAsync(long maDonHang, TrangThaiDonHang trangThaiMoi, int maNhanVien);
     /// <summary>Nhân viên hủy đơn Chờ xác nhận / Đã xác nhận / Đang giao (giao thất bại) và hoàn kho (BR13).</summary>
@@ -23,8 +23,9 @@ public partial interface IDonHangService
 
 public partial class DonHangService
 {
-    public async Task<List<DonHangQtDto>> TimKiemQuanTriAsync(LocDonHang loc)
+    public async Task<List<DonHangQtDto>> TimKiemQuanTriAsync(LocDonHang loc, int maNhanVien)
     {
+        await _db.KiemTraAsync(maNhanVien, QuyenHan.BanHang);
         var q = _db.DonHangs.AsNoTracking();
         if (!string.IsNullOrWhiteSpace(loc.TuKhoa))
         {
@@ -47,8 +48,11 @@ public partial class DonHangService
         }).Take(500).ToListAsync();
     }
 
-    public Task<DonHangChiTietDto?> LayChiTietQuanTriAsync(long maDonHang) =>
-        ChonChiTiet(_db.DonHangs.Where(d => d.MaDonHang == maDonHang)).FirstOrDefaultAsync();
+    public async Task<DonHangChiTietDto?> LayChiTietQuanTriAsync(long maDonHang, int maNhanVien)
+    {
+        await _db.KiemTraAsync(maNhanVien, QuyenHan.BanHang);
+        return await ChonChiTiet(_db.DonHangs.Where(d => d.MaDonHang == maDonHang)).FirstOrDefaultAsync();
+    }
 
     public async Task ChuyenTrangThaiAsync(long maDonHang, TrangThaiDonHang trangThaiMoi, int maNhanVien)
     {

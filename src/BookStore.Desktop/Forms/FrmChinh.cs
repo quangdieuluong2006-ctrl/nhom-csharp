@@ -97,7 +97,7 @@ public partial class FrmChinh : Form
     private async Task KiemTraDonMoiAsync()
     {
         using var scope = _scopes.CreateScope();
-        var tq = await scope.ServiceProvider.GetRequiredService<IBaoCaoService>().TongQuanAsync();
+        var tq = await scope.ServiceProvider.GetRequiredService<IBaoCaoService>().TongQuanAsync(_phien.MaTaiKhoan);
         int soDon = tq.DonChoXacNhan;
         lblDonCho.Text = soDon > 0 ? $"🔔 {soDon} đơn chờ xác nhận – nhấp để xử lý" : "Không có đơn chờ xác nhận";
         lblDonCho.ForeColor = soDon > 0 ? Color.Firebrick : Color.DimGray;

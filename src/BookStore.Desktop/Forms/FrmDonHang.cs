@@ -77,7 +77,7 @@ public partial class FrmDonHang : Form
     {
         chonMa ??= GiaoDien.DongDangChon<DonHangQtDto>(dgvDanhSach)?.MaDonHang;
         _dangNap = true;
-        var ds = await _svc.TimKiemQuanTriAsync(TaoBoLoc());
+        var ds = await _svc.TimKiemQuanTriAsync(TaoBoLoc(), _phien.MaTaiKhoan);
         GiaoDien.GanDanhSach(dgvDanhSach, ds);
         GiaoDien.DoRongCot(dgvDanhSach, ("MaDonHang", 45), ("NgayDat", 80), ("SoDienThoaiNhan", 65), ("TongTien", 60), ("ThanhToanText", 65));
         int cho = ds.Count(d => d.TrangThai == TrangThaiDonHang.ChoXacNhan);
@@ -90,7 +90,7 @@ public partial class FrmDonHang : Form
     private async Task HienThiChiTietAsync()
     {
         var dong = GiaoDien.DongDangChon<DonHangQtDto>(dgvDanhSach);
-        _donDangXem = dong is null ? null : await _svc.LayChiTietQuanTriAsync(dong.MaDonHang);
+        _donDangXem = dong is null ? null : await _svc.LayChiTietQuanTriAsync(dong.MaDonHang, _phien.MaTaiKhoan);
         if (_donDangXem is not { } d)
         {
             txtThongTinDon.Text = "Chọn một đơn hàng để xem chi tiết.";

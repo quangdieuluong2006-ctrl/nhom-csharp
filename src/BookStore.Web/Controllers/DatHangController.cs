@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using BookStore.Application.Common;
 using BookStore.Application.Dtos;
 using BookStore.Application.Services;
@@ -16,13 +17,13 @@ namespace BookStore.Web.Controllers;
 public class DatHangController : Controller
 {
     private readonly IDonHangService _donHang;
-    private readonly IAppDbContext _db;
+    private readonly ITaiKhoanService _taiKhoan;
     private readonly ILogger<DatHangController> _log;
 
-    public DatHangController(IDonHangService donHang, IAppDbContext db, ILogger<DatHangController> log)
+    public DatHangController(IDonHangService donHang, ITaiKhoanService taiKhoan, ILogger<DatHangController> log)
     {
         _donHang = donHang;
-        _db = db;
+        _taiKhoan = taiKhoan;
         _log = log;
     }
 
@@ -32,14 +33,14 @@ public class DatHangController : Controller
         var gio = GioHang.Doc(HttpContext.Session);
         if (gio.Dong.Count == 0) return RedirectToAction("Index", "GioHang");
 
-        // Điền sẵn thông tin người nhận từ hồ sơ khách hàng
-        var maKh = User.MaKhachHang();
-        var kh = await _db.KhachHangs.FindAsync(maKh);
+        // Điền sẵn thông tin người nhận từ hồ sơ khách hàng (qua tầng nghiệp vụ, controller không truy vấn CSDL trực tiếp)
+        var hoSo = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var maTk)
+            ? await _taiKhoan.LayHoSoAsync(maTk) : null;
         var tt = new ThongTinNhanHangDto
         {
-            HoTenNhan = kh?.HoTen ?? User.HoTen(),
-            SoDienThoaiNhan = kh?.SoDienThoai ?? "",
-            DiaChiGiaoHang = kh?.DiaChi ?? ""
+            HoTenNhan = hoSo?.HoTen ?? User.HoTen(),
+            SoDienThoaiNhan = hoSo?.SoDienThoai ?? "",
+            DiaChiGiaoHang = hoSo?.DiaChi ?? ""
         };
         ViewBag.GioHang = gio;
         return View(tt);

@@ -11,8 +11,8 @@ public interface IKhoService
     /// <summary>Lập phiếu nhập/xuất/điều chỉnh (UC-D07, US15). Trả về mã phiếu.</summary>
     Task<long> LuuPhieuAsync(PhieuKhoDto phieu, int maNhanVien);
     Task<List<TonKhoDto>> LayTonKhoAsync(string? tuKhoa, bool chiSapHet);
-    Task<List<PhieuKhoQtDto>> LayLichSuPhieuAsync(DateTime? tuNgay, DateTime? denNgay, LoaiPhieuKho? loai);
-    Task<List<ChiTietPhieuQtDto>> LayChiTietPhieuAsync(long maPhieu);
+    Task<List<PhieuKhoQtDto>> LayLichSuPhieuAsync(DateTime? tuNgay, DateTime? denNgay, LoaiPhieuKho? loai, int maNhanVien);
+    Task<List<ChiTietPhieuQtDto>> LayChiTietPhieuAsync(long maPhieu, int maNhanVien);
 }
 
 /// <summary>
@@ -82,8 +82,9 @@ public class KhoService : IKhoService
         }).ToListAsync();
     }
 
-    public async Task<List<PhieuKhoQtDto>> LayLichSuPhieuAsync(DateTime? tuNgay, DateTime? denNgay, LoaiPhieuKho? loai)
+    public async Task<List<PhieuKhoQtDto>> LayLichSuPhieuAsync(DateTime? tuNgay, DateTime? denNgay, LoaiPhieuKho? loai, int maNhanVien)
     {
+        await _db.KiemTraAsync(maNhanVien, QuyenHan.Kho);
         var q = _db.PhieuKhos.AsNoTracking();
         if (tuNgay is DateTime tu) q = q.Where(p => p.NgayLap >= tu.Date);
         if (denNgay is DateTime den) { var sau = den.Date.AddDays(1); q = q.Where(p => p.NgayLap < sau); }
@@ -95,8 +96,11 @@ public class KhoService : IKhoService
         }).Take(500).ToListAsync();
     }
 
-    public Task<List<ChiTietPhieuQtDto>> LayChiTietPhieuAsync(long maPhieu) =>
-        _db.ChiTietPhieuKhos.AsNoTracking().Where(c => c.MaPhieu == maPhieu)
+    public async Task<List<ChiTietPhieuQtDto>> LayChiTietPhieuAsync(long maPhieu, int maNhanVien)
+    {
+        await _db.KiemTraAsync(maNhanVien, QuyenHan.Kho);
+        return await _db.ChiTietPhieuKhos.AsNoTracking().Where(c => c.MaPhieu == maPhieu)
             .Select(c => new ChiTietPhieuQtDto { MaSach = c.MaSach, TenSach = c.Sach.TenSach, SoLuong = c.SoLuong, DonGiaNhap = c.DonGiaNhap })
             .ToListAsync();
+    }
 }

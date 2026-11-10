@@ -1,5 +1,9 @@
 using System.Globalization;
+using System.Security.Claims;
 using BookStore.Application;
+using BookStore.Application.Services;
+using BookStore.Domain.Enums;
+using Microsoft.AspNetCore.Authentication;
 using BookStore.Infrastructure;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Localization;
@@ -38,6 +42,19 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         o.AccessDeniedPath = "/Loi/403";
         o.ExpireTimeSpan = TimeSpan.FromDays(7);
         o.SlidingExpiration = true;
+        // Mỗi yêu cầu kiểm tra lại tài khoản trong CSDL: quản trị viên khóa tài khoản khách trên Desktop
+        // thì phiên đăng nhập Web mất hiệu lực ngay ở lần tải trang kế tiếp (không đợi cookie hết hạn 7 ngày).
+        o.Events.OnValidatePrincipal = async ctx =>
+        {
+            var svc = ctx.HttpContext.RequestServices.GetRequiredService<ITaiKhoanService>();
+            bool hopLe = int.TryParse(ctx.Principal?.FindFirstValue(ClaimTypes.NameIdentifier), out var ma)
+                         && await svc.ConHieuLucAsync(ma, VaiTro.KhachHang);
+            if (!hopLe)
+            {
+                ctx.RejectPrincipal();
+                await ctx.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            }
+        };
     });
 
 // Mọi form POST đều phải kèm anti-forgery token (chống tấn công CSRF)

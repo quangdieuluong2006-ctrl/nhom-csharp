@@ -33,7 +33,7 @@ public partial class FrmKhachHang : Form
     private async Task TaiDanhSachAsync(int? chonMa = null)
     {
         _dangNap = true;
-        var ds = await _svc.TimKiemAsync(txtTimKiem.Text);
+        var ds = await _svc.TimKiemAsync(_phien.MaTaiKhoan, txtTimKiem.Text);
         GiaoDien.GanDanhSach(dgvDanhSach, ds);
         GiaoDien.DoRongCot(dgvDanhSach, ("MaKhachHang", 25), ("SoDonHang", 30), ("DiaChi", 140));
         lblTongSo.Text = $"Có {ds.Count} khách hàng";
@@ -61,7 +61,7 @@ public partial class FrmKhachHang : Form
         lblTaiKhoan.Text = k.TaiKhoan == "—" ? "Khách vãng lai (không có tài khoản)" : k.TaiKhoan;
         grpThongTin.Text = $"Khách hàng #{k.MaKhachHang}";
 
-        var dons = await _donHang.TimKiemQuanTriAsync(new LocDonHang { MaKhachHang = k.MaKhachHang });
+        var dons = await _donHang.TimKiemQuanTriAsync(new LocDonHang { MaKhachHang = k.MaKhachHang }, _phien.MaTaiKhoan);
         GiaoDien.GanDanhSach(dgvDonCuaKhach, dons);
         foreach (var cot in new[] { "KhachHang", "HoTenNhan", "SoDienThoaiNhan", "ThanhToanText" })
             if (dgvDonCuaKhach.Columns[cot] is { } c) c.Visible = false;

@@ -51,7 +51,7 @@ public partial class FrmTongQuan : Form
             // Scope riêng cho mỗi lần làm mới: DbContext mới, không giữ dữ liệu cũ trong bộ nhớ
             using var scope = _scopes.CreateScope();
             var baoCao = scope.ServiceProvider.GetRequiredService<IBaoCaoService>();
-            var tq = await baoCao.TongQuanAsync();
+            var tq = await baoCao.TongQuanAsync(_phien.MaTaiKhoan);
             lblGiaTriDonCho.Text = tq.DonChoXacNhan.ToString();
             lblGiaTriDonCho.ForeColor = tq.DonChoXacNhan > 0 ? Color.FromArgb(192, 57, 43) : GiaoDien.MauChuDao;
             lblGiaTriDangXuLy.Text = tq.DonDangXuLy.ToString();
@@ -64,7 +64,7 @@ public partial class FrmTongQuan : Form
             if (_xemBanHang)
             {
                 var don = await scope.ServiceProvider.GetRequiredService<IDonHangService>()
-                    .TimKiemQuanTriAsync(new LocDonHang { TrangThai = TrangThaiDonHang.ChoXacNhan });
+                    .TimKiemQuanTriAsync(new LocDonHang { TrangThai = TrangThaiDonHang.ChoXacNhan }, _phien.MaTaiKhoan);
                 GiaoDien.GanDanhSach(dgvDonMoi, don);
                 foreach (var c in new[] { "HoTenNhan", "SoDienThoaiNhan", "TrangThaiText", "ThanhToanText" })
                     if (dgvDonMoi.Columns[c] is { } cot) cot.Visible = false;

@@ -8,13 +8,15 @@ namespace BookStore.Desktop.Forms;
 public partial class FrmBaoCao : Form
 {
     private readonly IBaoCaoService _svc;
+    private readonly PhienDangNhap _phien;
     private List<DoanhThuNgayDto> _doanhThu = new();
     private List<SachBanChayDto> _banChay = new();
 
-    public FrmBaoCao(IBaoCaoService svc)
+    public FrmBaoCao(IBaoCaoService svc, PhienDangNhap phien)
     {
         InitializeComponent();
         _svc = svc;
+        _phien = phien;
         GiaoDien.KieuBang(dgvTheoNgay);
         GiaoDien.KieuBang(dgvBanChay);
         dtpTuNgay.Value = DateTime.Today.AddDays(-29);
@@ -26,8 +28,8 @@ public partial class FrmBaoCao : Form
     {
         var tu = dtpTuNgay.Value.Date;
         var den = dtpDenNgay.Value.Date;
-        _doanhThu = await _svc.DoanhThuAsync(tu, den);
-        _banChay = await _svc.SachBanChayAsync(tu, den, 20);
+        _doanhThu = await _svc.DoanhThuAsync(tu, den, _phien.MaTaiKhoan);
+        _banChay = await _svc.SachBanChayAsync(tu, den, _phien.MaTaiKhoan, 20);
 
         GiaoDien.GanDanhSach(dgvTheoNgay, _doanhThu);
         if (dgvTheoNgay.Columns["Ngay"] is { } cotNgay) cotNgay.DefaultCellStyle.Format = "dd/MM/yyyy (ddd)";

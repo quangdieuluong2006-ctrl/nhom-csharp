@@ -73,6 +73,10 @@ public sealed class KiemTraNhap
     {
         if (_ds.All(x => x.O != o))
         {
+            // Biểu tượng lỗi vẽ bên phải ô; ô nằm sát mép bảng thì chừa lề phải để biểu tượng không bị che
+            _loi.SetIconPadding(o, 2);
+            if (o.Parent is TableLayoutPanel bang && bang.Padding.Right < 22)
+                bang.Padding = new Padding(bang.Padding.Left, bang.Padding.Top, 22, bang.Padding.Bottom);
             // Đã báo lỗi ở ô này thì kiểm tra lại ngay khi người dùng sửa, để dấu đỏ biến mất khi đã đúng
             o.TextChanged += (_, _) => KiemTraLai(o);
             if (o is ComboBox cbo) cbo.SelectedIndexChanged += (_, _) => KiemTraLai(o);

@@ -8,9 +8,10 @@ namespace BookStore.Application.Services;
 public interface IBaoCaoService
 {
     /// <summary>Doanh thu theo ngày trong khoảng (Bảng 4.6). Chỉ tính đơn "Hoàn thành" (US16); ngày không có đơn = 0.</summary>
-    Task<List<DoanhThuNgayDto>> DoanhThuAsync(DateTime tuNgay, DateTime denNgay);
-    Task<List<SachBanChayDto>> SachBanChayAsync(DateTime tuNgay, DateTime denNgay, int soLuong = 10);
-    Task<TongQuanDto> TongQuanAsync();
+    Task<List<DoanhThuNgayDto>> DoanhThuAsync(DateTime tuNgay, DateTime denNgay, int maNhanVien);
+    Task<List<SachBanChayDto>> SachBanChayAsync(DateTime tuNgay, DateTime denNgay, int maNhanVien, int soLuong = 10);
+    /// <summary>Số liệu tổng quan; doanh thu chỉ trả về cho vai trò được xem báo cáo doanh thu (QTV, NV bán hàng).</summary>
+    Task<TongQuanDto> TongQuanAsync(int maNhanVien);
 }
 
 /// <summary>
@@ -30,8 +31,9 @@ public class BaoCaoService : IBaoCaoService
             .Where(d => d.TrangThai == TrangThaiDonHang.HoanThanh && d.NgayDat >= tu && d.NgayDat < sau);
     }
 
-    public async Task<List<DoanhThuNgayDto>> DoanhThuAsync(DateTime tuNgay, DateTime denNgay)
+    public async Task<List<DoanhThuNgayDto>> DoanhThuAsync(DateTime tuNgay, DateTime denNgay, int maNhanVien)
     {
+        await _db.KiemTraAsync(maNhanVien, QuyenHan.BanHang);   // Bảng 3.13, dòng 13
         if (denNgay.Date < tuNgay.Date) throw new BusinessException("Ngày kết thúc phải sau ngày bắt đầu.");
         if ((denNgay.Date - tuNgay.Date).TotalDays > 366) throw new BusinessException("Chỉ xem tối đa 1 năm mỗi lần.");
 
@@ -49,8 +51,9 @@ public class BaoCaoService : IBaoCaoService
         return kq;
     }
 
-    public async Task<List<SachBanChayDto>> SachBanChayAsync(DateTime tuNgay, DateTime denNgay, int soLuong = 10)
+    public async Task<List<SachBanChayDto>> SachBanChayAsync(DateTime tuNgay, DateTime denNgay, int maNhanVien, int soLuong = 10)
     {
+        await _db.KiemTraAsync(maNhanVien, QuyenHan.BanHang);
         var maDons = DonHoanThanh(tuNgay, denNgay).Select(d => d.MaDonHang);
         return await _db.ChiTietDonHangs.AsNoTracking()
             .Where(c => maDons.Contains(c.MaDonHang))
@@ -64,8 +67,10 @@ public class BaoCaoService : IBaoCaoService
             .Take(soLuong).ToListAsync();
     }
 
-    public async Task<TongQuanDto> TongQuanAsync()
+    public async Task<TongQuanDto> TongQuanAsync(int maNhanVien)
     {
+        await _db.KiemTraAsync(maNhanVien, QuyenHan.NhanVien);
+        bool xemDoanhThu = await _db.TaiKhoans.AnyAsync(t => t.MaTaiKhoan == maNhanVien && QuyenHan.BanHang.Contains(t.VaiTro));
         var homNay = DateTime.Today;
         var dauThang = new DateTime(homNay.Year, homNay.Month, 1);
         var hoanThanhThang = DonHoanThanh(dauThang, homNay);
@@ -73,8 +78,8 @@ public class BaoCaoService : IBaoCaoService
         {
             DonChoXacNhan = await _db.DonHangs.CountAsync(d => d.TrangThai == TrangThaiDonHang.ChoXacNhan),
             DonDangXuLy = await _db.DonHangs.CountAsync(d => d.TrangThai == TrangThaiDonHang.DaXacNhan || d.TrangThai == TrangThaiDonHang.DangGiao),
-            DoanhThuHomNay = await hoanThanhThang.Where(d => d.NgayDat >= homNay).SumAsync(d => d.TongTien),
-            DoanhThuThangNay = await hoanThanhThang.SumAsync(d => d.TongTien),
+            DoanhThuHomNay = xemDoanhThu ? await hoanThanhThang.Where(d => d.NgayDat >= homNay).SumAsync(d => d.TongTien) : 0,
+            DoanhThuThangNay = xemDoanhThu ? await hoanThanhThang.SumAsync(d => d.TongTien) : 0,
             SachSapHet = await _db.Sachs.CountAsync(s => s.TrangThai && s.SoLuongTon <= KhoService.NguongSapHet),
             TongDauSach = await _db.Sachs.CountAsync(s => s.TrangThai),
             TongKhachHang = await _db.KhachHangs.CountAsync()

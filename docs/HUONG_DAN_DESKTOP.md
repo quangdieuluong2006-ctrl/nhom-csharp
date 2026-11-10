@@ -49,6 +49,8 @@ src/BookStore.Desktop
 
 Mỗi form chỉ gọi service của `BookStore.Application`; không viết truy vấn CSDL trong form.
 Service kiểm tra lại quyền (`QuyenHan.KiemTraAsync`) nên dù gọi trực tiếp, chức năng ngoài quyền vẫn bị từ chối (ca ST03).
+Kiểm tra quyền áp dụng cho mọi thao tác ghi và cả thao tác đọc dữ liệu nhạy cảm (doanh thu, khách hàng, đơn hàng,
+lịch sử kho); danh sách sách và tồn kho mọi nhân viên đều xem được (Bảng 3.13, dòng 6).
 
 ## Thêm một chức năng mới
 

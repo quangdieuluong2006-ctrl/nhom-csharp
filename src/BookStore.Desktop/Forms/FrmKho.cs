@@ -9,13 +9,15 @@ namespace BookStore.Desktop.Forms;
 public partial class FrmKho : Form
 {
     private readonly IKhoService _kho;
+    private readonly PhienDangNhap _phien;
     private List<TonKhoDto> _tonKho = new();
     private bool _dangNap;
 
-    public FrmKho(IKhoService kho)
+    public FrmKho(IKhoService kho, PhienDangNhap phien)
     {
         InitializeComponent();
         _kho = kho;
+        _phien = phien;
         foreach (var g in new[] { dgvTonKho, dgvPhieu, dgvChiTietPhieu }) GiaoDien.KieuBang(g);
         GiaoDien.GanCombo(cboLoai, Enum.GetValues<LoaiPhieuKho>().Select(l => new MucChonDto((int)l + 1, l.Ten())), "(Tất cả loại)");
         dtpTuNgay.Value = DateTime.Today.AddDays(-30);
@@ -35,7 +37,7 @@ public partial class FrmKho : Form
     {
         _dangNap = true;
         LoaiPhieuKho? loai = GiaoDien.MaDangChon(cboLoai) is int m ? (LoaiPhieuKho)(m - 1) : null;
-        var ds = await _kho.LayLichSuPhieuAsync(dtpTuNgay.Value, dtpDenNgay.Value, loai);
+        var ds = await _kho.LayLichSuPhieuAsync(dtpTuNgay.Value, dtpDenNgay.Value, loai, _phien.MaTaiKhoan);
         GiaoDien.GanDanhSach(dgvPhieu, ds);
         GiaoDien.DoRongCot(dgvPhieu, ("MaPhieu", 30), ("SoDong", 30), ("TongSoLuong", 40), ("GhiChu", 150));
         _dangNap = false;
@@ -50,7 +52,7 @@ public partial class FrmKho : Form
             lblChiTietPhieu.Text = "Chi tiết phiếu đang chọn";
             return;
         }
-        GiaoDien.GanDanhSach(dgvChiTietPhieu, await _kho.LayChiTietPhieuAsync(p.MaPhieu));
+        GiaoDien.GanDanhSach(dgvChiTietPhieu, await _kho.LayChiTietPhieuAsync(p.MaPhieu, _phien.MaTaiKhoan));
         GiaoDien.DoRongCot(dgvChiTietPhieu, ("MaSach", 25), ("TenSach", 200));
         lblChiTietPhieu.Text = $"Chi tiết phiếu #{p.MaPhieu} – {p.LoaiText} – {p.NgayLap:dd/MM/yyyy HH:mm} – {p.NguoiLap}";
     }

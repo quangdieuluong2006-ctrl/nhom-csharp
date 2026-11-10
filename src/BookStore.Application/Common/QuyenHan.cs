@@ -7,6 +7,8 @@ namespace BookStore.Application.Common;
 /// Kiểm tra quyền ở tầng nghiệp vụ (BR08, ca kiểm thử ST03): Desktop đã ẩn menu theo vai trò,
 /// nhưng service vẫn kiểm tra lại để "gọi trực tiếp" chức năng ngoài quyền cũng bị từ chối.
 /// Quyền lấy từ CSDL (không tin vai trò do giao diện gửi lên), tài khoản bị khóa cũng bị từ chối.
+/// Áp dụng cho mọi thao tác ghi và các thao tác đọc dữ liệu nhạy cảm (doanh thu, khách hàng, đơn hàng, lịch sử kho);
+/// danh sách sách và tồn kho mọi nhân viên đều được xem (Bảng 3.13, dòng 6).
 /// </summary>
 public static class QuyenHan
 {
