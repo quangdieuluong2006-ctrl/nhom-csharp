@@ -30,6 +30,9 @@ public partial class FrmTongQuan : Form
         _log = log;
         _xemBanHang = phien.CoQuyen(VaiTro.QuanTriVien, VaiTro.NhanVienBanHang);
         _xemKho = phien.CoQuyen(VaiTro.QuanTriVien, VaiTro.NhanVienKho);
+        // Màn hình hẹp: các ô số liệu xuống dòng thì khung tự cao lên, không bị che
+        flowThe.AutoSize = true;
+        flowThe.AutoSizeMode = AutoSizeMode.GrowAndShrink;
         GiaoDien.KieuBang(dgvDonMoi);
         GiaoDien.KieuBang(dgvSapHet);
 

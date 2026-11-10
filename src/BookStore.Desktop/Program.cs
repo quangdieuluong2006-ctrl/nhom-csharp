@@ -17,6 +17,13 @@ internal static class Program
     {
         ApplicationConfiguration.Initialize();
 
+        // Định dạng số, tiền, ngày theo tiếng Việt (320.000 đ, 12/10/2026) dù Windows cài tiếng Anh
+        var vi = new System.Globalization.CultureInfo("vi-VN");
+        System.Globalization.CultureInfo.DefaultThreadCurrentCulture = vi;
+        System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = vi;
+        System.Threading.Thread.CurrentThread.CurrentCulture = vi;
+        System.Threading.Thread.CurrentThread.CurrentUICulture = vi;
+
         // ---- Cấu hình và DI (giống Program.cs của Web) ----
         var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
         {

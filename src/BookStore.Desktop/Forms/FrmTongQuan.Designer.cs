@@ -110,14 +110,14 @@ partial class FrmTongQuan
         pnlDonCho.BackColor = Color.White;
         pnlDonCho.Margin = new Padding(6);
         pnlDonCho.Padding = new Padding(12, 8, 12, 8);
-        pnlDonCho.Size = new Size(175, 98);
+        pnlDonCho.Size = new Size(205, 98);
         pnlDonCho.Name = "pnlDonCho";
         pnlDonCho.TabIndex = 3;
         //
         // lblGiaTriDonCho
         //
         lblGiaTriDonCho.Dock = DockStyle.Fill;
-        lblGiaTriDonCho.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
+        lblGiaTriDonCho.Font = new Font("Segoe UI", 16F, FontStyle.Bold);
         lblGiaTriDonCho.ForeColor = Color.FromArgb(22, 50, 79);
         lblGiaTriDonCho.Text = "–";
         lblGiaTriDonCho.TextAlign = ContentAlignment.MiddleLeft;
@@ -140,14 +140,14 @@ partial class FrmTongQuan
         pnlDangXuLy.BackColor = Color.White;
         pnlDangXuLy.Margin = new Padding(6);
         pnlDangXuLy.Padding = new Padding(12, 8, 12, 8);
-        pnlDangXuLy.Size = new Size(175, 98);
+        pnlDangXuLy.Size = new Size(205, 98);
         pnlDangXuLy.Name = "pnlDangXuLy";
         pnlDangXuLy.TabIndex = 6;
         //
         // lblGiaTriDangXuLy
         //
         lblGiaTriDangXuLy.Dock = DockStyle.Fill;
-        lblGiaTriDangXuLy.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
+        lblGiaTriDangXuLy.Font = new Font("Segoe UI", 16F, FontStyle.Bold);
         lblGiaTriDangXuLy.ForeColor = Color.FromArgb(22, 50, 79);
         lblGiaTriDangXuLy.Text = "–";
         lblGiaTriDangXuLy.TextAlign = ContentAlignment.MiddleLeft;
@@ -170,14 +170,14 @@ partial class FrmTongQuan
         pnlDoanhThuNgay.BackColor = Color.White;
         pnlDoanhThuNgay.Margin = new Padding(6);
         pnlDoanhThuNgay.Padding = new Padding(12, 8, 12, 8);
-        pnlDoanhThuNgay.Size = new Size(175, 98);
+        pnlDoanhThuNgay.Size = new Size(205, 98);
         pnlDoanhThuNgay.Name = "pnlDoanhThuNgay";
         pnlDoanhThuNgay.TabIndex = 9;
         //
         // lblGiaTriDoanhThuNgay
         //
         lblGiaTriDoanhThuNgay.Dock = DockStyle.Fill;
-        lblGiaTriDoanhThuNgay.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
+        lblGiaTriDoanhThuNgay.Font = new Font("Segoe UI", 16F, FontStyle.Bold);
         lblGiaTriDoanhThuNgay.ForeColor = Color.FromArgb(22, 50, 79);
         lblGiaTriDoanhThuNgay.Text = "–";
         lblGiaTriDoanhThuNgay.TextAlign = ContentAlignment.MiddleLeft;
@@ -200,14 +200,14 @@ partial class FrmTongQuan
         pnlDoanhThuThang.BackColor = Color.White;
         pnlDoanhThuThang.Margin = new Padding(6);
         pnlDoanhThuThang.Padding = new Padding(12, 8, 12, 8);
-        pnlDoanhThuThang.Size = new Size(175, 98);
+        pnlDoanhThuThang.Size = new Size(205, 98);
         pnlDoanhThuThang.Name = "pnlDoanhThuThang";
         pnlDoanhThuThang.TabIndex = 12;
         //
         // lblGiaTriDoanhThuThang
         //
         lblGiaTriDoanhThuThang.Dock = DockStyle.Fill;
-        lblGiaTriDoanhThuThang.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
+        lblGiaTriDoanhThuThang.Font = new Font("Segoe UI", 16F, FontStyle.Bold);
         lblGiaTriDoanhThuThang.ForeColor = Color.FromArgb(22, 50, 79);
         lblGiaTriDoanhThuThang.Text = "–";
         lblGiaTriDoanhThuThang.TextAlign = ContentAlignment.MiddleLeft;
@@ -230,14 +230,14 @@ partial class FrmTongQuan
         pnlSapHet.BackColor = Color.White;
         pnlSapHet.Margin = new Padding(6);
         pnlSapHet.Padding = new Padding(12, 8, 12, 8);
-        pnlSapHet.Size = new Size(175, 98);
+        pnlSapHet.Size = new Size(205, 98);
         pnlSapHet.Name = "pnlSapHet";
         pnlSapHet.TabIndex = 15;
         //
         // lblGiaTriSapHet
         //
         lblGiaTriSapHet.Dock = DockStyle.Fill;
-        lblGiaTriSapHet.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
+        lblGiaTriSapHet.Font = new Font("Segoe UI", 16F, FontStyle.Bold);
         lblGiaTriSapHet.ForeColor = Color.FromArgb(22, 50, 79);
         lblGiaTriSapHet.Text = "–";
         lblGiaTriSapHet.TextAlign = ContentAlignment.MiddleLeft;
@@ -260,14 +260,14 @@ partial class FrmTongQuan
         pnlDauSach.BackColor = Color.White;
         pnlDauSach.Margin = new Padding(6);
         pnlDauSach.Padding = new Padding(12, 8, 12, 8);
-        pnlDauSach.Size = new Size(175, 98);
+        pnlDauSach.Size = new Size(205, 98);
         pnlDauSach.Name = "pnlDauSach";
         pnlDauSach.TabIndex = 18;
         //
         // lblGiaTriDauSach
         //
         lblGiaTriDauSach.Dock = DockStyle.Fill;
-        lblGiaTriDauSach.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
+        lblGiaTriDauSach.Font = new Font("Segoe UI", 16F, FontStyle.Bold);
         lblGiaTriDauSach.ForeColor = Color.FromArgb(22, 50, 79);
         lblGiaTriDauSach.Text = "–";
         lblGiaTriDauSach.TextAlign = ContentAlignment.MiddleLeft;

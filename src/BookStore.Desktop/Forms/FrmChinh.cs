@@ -70,12 +70,14 @@ public partial class FrmChinh : Form
     private Button? _nutDangChon;
 
     /// <summary>
+    /// Kích thước tính bằng LogicalToDeviceUnits: control tạo bằng code không được WinForms tự giãn
+    /// khi Windows phóng to 125–150%, nên phải tự đổi từ đơn vị 96 DPI sang DPI thật của màn hình.
     /// Thanh điều hướng dựng từ chính menu: chỉ có nút cho mục menu mà vai trò hiện tại được thấy,
     /// nên phân quyền luôn khớp với menu (PhanQuyenMenu) mà không phải viết lặp.
     /// </summary>
     private void TaoThanhDieuHuong()
     {
-        var thanh = new Panel { Dock = DockStyle.Left, Width = 230, BackColor = ChuDe.XanhRatDam, Name = "pnlDieuHuong" };
+        var thanh = new Panel { Dock = DockStyle.Left, Width = LogicalToDeviceUnits(250), BackColor = ChuDe.XanhRatDam, Name = "pnlDieuHuong" };
         var ds = new FlowLayoutPanel
         {
             Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = true,
@@ -83,7 +85,7 @@ public partial class FrmChinh : Form
         };
         var logo = new Label
         {
-            Dock = DockStyle.Top, Height = 64, Text = "BookStore", ForeColor = ChuDe.Vang,
+            Dock = DockStyle.Top, Height = LogicalToDeviceUnits(64), Text = "BookStore", ForeColor = ChuDe.Vang,
             Font = new Font("Segoe UI Semibold", 15F), TextAlign = ContentAlignment.MiddleLeft, Padding = new Padding(16, 0, 0, 0)
         };
         var duoi = new FlowLayoutPanel
@@ -99,7 +101,7 @@ public partial class FrmChinh : Form
             if (!nhom.Available || cacMuc.Count == 0) continue;
             ds.Controls.Add(new Label
             {
-                Text = (nhom.Text ?? "").Replace("&", "").ToUpper(), AutoSize = false, Width = 200, Height = 30,
+                Text = (nhom.Text ?? "").Replace("&", "").ToUpper(), AutoSize = false, Width = LogicalToDeviceUnits(220), Height = LogicalToDeviceUnits(30),
                 ForeColor = Color.FromArgb(150, 170, 190), Font = new Font("Segoe UI Semibold", 8.25F),
                 TextAlign = ContentAlignment.BottomLeft, Margin = new Padding(6, 10, 0, 2)
             });
@@ -122,7 +124,7 @@ public partial class FrmChinh : Form
     {
         var nut = new Button
         {
-            Text = chu, Width = 200, Height = 38, FlatStyle = FlatStyle.Flat, TextAlign = ContentAlignment.MiddleLeft,
+            Text = chu, Width = LogicalToDeviceUnits(220), Height = LogicalToDeviceUnits(38), AutoEllipsis = true, FlatStyle = FlatStyle.Flat, TextAlign = ContentAlignment.MiddleLeft,
             ForeColor = Color.White, BackColor = ChuDe.XanhRatDam, Cursor = Cursors.Hand, Font = new Font("Segoe UI", 10F),
             Padding = new Padding(12, 0, 0, 0), Margin = new Padding(0, 1, 0, 1), UseVisualStyleBackColor = false
         };
