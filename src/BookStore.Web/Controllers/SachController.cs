@@ -12,6 +12,7 @@ namespace BookStore.Web.Controllers;
 ///   /Sach?danhmuc=2   – sách theo danh mục (chủ đề)
 ///   /Sach?nxb=1       – sách theo nhà xuất bản
 ///   /Sach?tukhoa=...  – tìm kiếm theo tên sách, tác giả, ISBN
+///   /Sach?sapxep=BanChay – sách bán chạy (menu "Bán chạy")
 /// </summary>
 public class SachController : Controller
 {
@@ -43,6 +44,7 @@ public class SachController : Controller
             TieuDe = danhmuc is int d ? await _danhMuc.LayTenDanhMucAsync(d) ?? "Danh mục"
                    : nxb is int n ? await _danhMuc.LayTenNhaXuatBanAsync(n) ?? "Nhà xuất bản"
                    : !string.IsNullOrWhiteSpace(tukhoa) ? $"Kết quả tìm kiếm “{tukhoa.Trim()}”"
+                   : sapxep == SapXepSach.BanChay ? "Sách bán chạy"
                    : "Tất cả sách"
         };
         return View(vm);

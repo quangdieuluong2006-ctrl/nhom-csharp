@@ -1,4 +1,4 @@
-@model IReadOnlyList<SachTomTatDto>
+@model BookStore.Web.Models.TrangChuViewModel
 @{
     ViewData["Title"] = "Trang chủ";
 }
@@ -8,12 +8,26 @@
     <a class="btn btn-gold" asp-controller="Sach" asp-action="Index"><i class="bi bi-collection"></i> Xem tất cả sách</a>
 </section>
 
+@if (Model.SachBanChay.Count > 0)
+{
+    <div class="d-flex justify-content-between align-items-end mb-3">
+        <h2 class="h5 section-title mb-0"><i class="bi bi-fire text-gold"></i> Sách bán chạy</h2>
+        <a asp-controller="Sach" asp-action="Index" asp-route-sapxep="BanChay" class="small">Xem thêm <i class="bi bi-arrow-right"></i></a>
+    </div>
+    <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3 mb-4">
+        @foreach (var s in Model.SachBanChay)
+        {
+            <div class="col"><partial name="_TheSach" model="s" /></div>
+        }
+    </div>
+}
+
 <div class="d-flex justify-content-between align-items-end mb-3">
     <h2 class="h5 section-title mb-0">Sách mới</h2>
     <a asp-controller="Sach" asp-action="Index" class="small">Xem thêm <i class="bi bi-arrow-right"></i></a>
 </div>
 <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3">
-    @foreach (var s in Model)
+    @foreach (var s in Model.SachMoi)
     {
         <div class="col"><partial name="_TheSach" model="s" /></div>
     }

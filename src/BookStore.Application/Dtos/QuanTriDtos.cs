@@ -146,6 +146,14 @@ public class KhachHangQtDto
     [DisplayName("Email")] public string? Email { get; init; }
     [DisplayName("Địa chỉ")] public string? DiaChi { get; init; }
     [DisplayName("Tài khoản Web")] public string TaiKhoan { get; init; } = "";
+    /// <summary>null: khách vãng lai (không có tài khoản Web); true: đang hoạt động; false: đã khóa.</summary>
+    [Browsable(false)] public bool? TaiKhoanHoatDong { get; init; }
+    [DisplayName("Trạng thái")] public string TrangThaiText => TaiKhoanHoatDong switch
+    {
+        null => "Vãng lai",
+        true => "Hoạt động",
+        false => "Đã khóa"
+    };
     [DisplayName("Số đơn")] public int SoDonHang { get; init; }
     [DisplayName("Đã mua (đơn hoàn thành)")] public decimal TongChiTieu { get; init; }
 }

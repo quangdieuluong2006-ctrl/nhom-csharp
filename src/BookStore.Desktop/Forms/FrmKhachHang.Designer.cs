@@ -45,7 +45,10 @@ partial class FrmKhachHang
         lblTaiKhoanNhan = new Label();
         lblTaiKhoan = new Label();
         flowNut = new FlowLayoutPanel();
+        btnThemMoi = new Button();
         btnLuu = new Button();
+        btnXoa = new Button();
+        btnKhoa = new Button();
         pnlDuoi = new Panel();
         lblTongSo = new Label();
         dgvDanhSach = new DataGridView();
@@ -271,17 +274,29 @@ partial class FrmKhachHang
         //
         // flowNut
         //
+        flowNut.Controls.Add(btnThemMoi);
         flowNut.Controls.Add(btnLuu);
+        flowNut.Controls.Add(btnXoa);
+        flowNut.Controls.Add(btnKhoa);
         flowNut.AutoSize = true;
         flowNut.Dock = DockStyle.Top;
         flowNut.Padding = new Padding(0, 10, 0, 0);
         flowNut.Name = "flowNut";
         flowNut.TabIndex = 21;
         //
+        // btnThemMoi
+        //
+        btnThemMoi.Size = new Size(100, 36);
+        btnThemMoi.Text = "Thêm mới";
+        btnThemMoi.UseVisualStyleBackColor = true;
+        btnThemMoi.Name = "btnThemMoi";
+        btnThemMoi.TabIndex = 21;
+        btnThemMoi.Click += btnThemMoi_Click;
+        //
         // btnLuu
         //
-        btnLuu.Size = new Size(130, 36);
-        btnLuu.Text = "Lưu thay đổi";
+        btnLuu.Size = new Size(90, 36);
+        btnLuu.Text = "Lưu";
         btnLuu.BackColor = Color.FromArgb(242, 184, 75);
         btnLuu.FlatStyle = FlatStyle.Flat;
         btnLuu.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
@@ -289,6 +304,24 @@ partial class FrmKhachHang
         btnLuu.Name = "btnLuu";
         btnLuu.TabIndex = 22;
         btnLuu.Click += btnLuu_Click;
+        //
+        // btnXoa
+        //
+        btnXoa.Size = new Size(80, 36);
+        btnXoa.Text = "Xóa";
+        btnXoa.UseVisualStyleBackColor = true;
+        btnXoa.Name = "btnXoa";
+        btnXoa.TabIndex = 23;
+        btnXoa.Click += btnXoa_Click;
+        //
+        // btnKhoa
+        //
+        btnKhoa.Size = new Size(120, 36);
+        btnKhoa.Text = "Khóa tài khoản";
+        btnKhoa.UseVisualStyleBackColor = true;
+        btnKhoa.Name = "btnKhoa";
+        btnKhoa.TabIndex = 24;
+        btnKhoa.Click += btnKhoa_Click;
         //
         // pnlDuoi
         //
@@ -391,7 +424,10 @@ partial class FrmKhachHang
     private Label lblTaiKhoanNhan;
     private Label lblTaiKhoan;
     private FlowLayoutPanel flowNut;
+    private Button btnThemMoi;
     private Button btnLuu;
+    private Button btnXoa;
+    private Button btnKhoa;
     private Panel pnlDuoi;
     private Label lblTongSo;
     private DataGridView dgvDanhSach;

@@ -1,7 +1,11 @@
 namespace BookStore.Application.Dtos;
 
 /// <summary>Thông tin rút gọn để hiển thị sách trên lưới (trang chủ, danh sách).</summary>
-public record SachTomTatDto(int MaSach, string TenSach, string TacGia, decimal DonGia, string? HinhAnh, int SoLuongTon);
+public record SachTomTatDto(int MaSach, string TenSach, string TacGia, decimal DonGia, string? HinhAnh, int SoLuongTon)
+{
+    /// <summary>Số cuốn đã bán: tổng số lượng trong các đơn chưa bị hủy (dùng cho "Sách bán chạy").</summary>
+    public int DaBan { get; init; }
+}
 
 /// <summary>Thông tin đầy đủ cho trang chi tiết sách.</summary>
 public record SachChiTietDto(
@@ -15,7 +19,7 @@ public record MucMenuDto(int Ma, string Ten, int SoSach)
     public IReadOnlyList<MucMenuDto> Con { get; init; } = Array.Empty<MucMenuDto>();
 }
 
-public enum SapXepSach { MoiNhat, GiaTang, GiaGiam, TenAZ }
+public enum SapXepSach { MoiNhat, GiaTang, GiaGiam, TenAZ, BanChay }
 
 /// <summary>Điều kiện lọc sách: theo từ khóa, danh mục, nhà xuất bản, khoảng giá.</summary>
 public class LocSach
